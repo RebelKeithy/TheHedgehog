@@ -1,7 +1,6 @@
 import type {Config} from "./config.ts";
 import type {Cube} from "./cube.ts";
-
-const game = undefined
+import type {Scene} from "three";
 
 export class Game {
     private static _instance: Game
@@ -13,7 +12,7 @@ export class Game {
         return Game._instance
     }
 
-    constructor(config, scene, cube) {
+    constructor(config: Config, scene: Scene, cube: Cube) {
         Game._instance = this
         this.config = config
         this.scene = scene

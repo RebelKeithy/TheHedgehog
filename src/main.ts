@@ -4,9 +4,11 @@ import {TurnController, TurnRegistry} from "./turn_controller.ts";
 import {Cube} from "./cube.ts";
 import {Game} from "./game.ts";
 import {Config} from "./config.ts";
+import {PerspectiveCamera, Scene, WebGLRenderer} from "three";
 
 
-let config: Config, scene, camera, renderer, controls, cube: Cube;
+let config: Config, scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer, controls: OrbitControls, cube: Cube;
+let turnController: TurnController;
 
 // Vignette+Noise full-screen background (clip-space quad)
 function createVignetteBackground() {
@@ -26,7 +28,7 @@ function createVignetteBackground() {
             u_vignetteSoftness: { value: 0.0 },   // how soft the falloff is
             u_vignetteStrength: { value: 0.85 },  // how strong the darkening is
 
-            u_noiseAmount: { value: 0.03 },       // 0.. ~0.3 typical
+            u_noiseAmount: { value: 0.03 },       // 0. ~0.3 typical
             u_noiseSpeed:  { value: 1.5 },        // grain flicker speed
             u_grainScale:  { value: 80.0 },      // spatial grain density (higher = finer)
         },
@@ -137,7 +139,8 @@ function init() {
     scene.add(directionalLight);
 
     cube = new Cube(scene)
-    const game = new Game(config, scene, cube)
+    new Game(config, scene, cube)
+    turnController = new TurnController(scene, cube)
 
     window.addEventListener('resize', onWindowResize, false);
 }
@@ -148,51 +151,21 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-let active_turn = undefined
-const turn_controller = new TurnController(scene, cube)
-
 let tick = 0
 
 function animate() {
     tick++
     requestAnimationFrame(animate);
+
+    turnController.tick()
+
     controls.update();
     renderer.render(scene, camera);
-
-    turn_controller.tick()
-
-    if (cube) {
-        cube.cubies.forEach((c) => {
-            c.stickers.forEach((s) => {
-                // const angle = (Math.sin(tick / 40) + 1)/2 * 360;
-                // const angle = tick / 200 * 360;
-                // console.log(angle)
-                // s.setRotation(Math.PI * angle/180)
-            })
-        })
-    }
-
-    if (!turn_controller.cube) {
-        turn_controller.scene = scene
-        turn_controller.cube = cube
-    }
-
-    if (cube && active_turn) {
-        active_turn.update(0.1)
-        if (active_turn.angle > Math.PI) {
-            active_turn.stop()
-            active_turn = undefined
-        }
-
-    }
 }
 
-let mouse_down = false
 let preparing_turn = false
-let turn_start = undefined
 
 document.addEventListener('mousedown', (event) => {
-    mouse_down = true
     const raycaster = new THREE.Raycaster();
     const x = event.clientX / window.innerWidth * 2 - 1;
     const y = (window.innerHeight - event.clientY) / window.innerHeight * 2 - 1
@@ -205,9 +178,8 @@ document.addEventListener('mousedown', (event) => {
             c.stickers.forEach((s) => {
                 if (!found && s.cube.id == intersects[i].object.parent!.id) {
                     s.onClick()
-                    turn_start = pointer
                     preparing_turn = true
-                    turn_controller.clickStart(s, pointer, event.button == 0, event.button == 2)
+                    turnController.clickStart(s, pointer, event.button == 0)
                     found = true
                 }
             })
@@ -218,25 +190,23 @@ document.addEventListener('mousedown', (event) => {
 
 document.addEventListener('keydown', (event) => {
     if (event.key == 'Shift') {
-        if (turn_controller) {
-            turn_controller.setShift(true)
+        if (turnController) {
+            turnController.setShift(true)
         }
     }
 })
 
 document.addEventListener('keyup', (event) => {
     if (event.key == 'Shift') {
-        if (turn_controller) {
-            turn_controller.setShift(false)
+        if (turnController) {
+            turnController.setShift(false)
         }
     }
 })
 
-document.addEventListener('mouseup', (event) => {
-    mouse_down = false
-    turn_start = false
+document.addEventListener('mouseup', (_) => {
     preparing_turn = false
-    turn_controller.mouseUp()
+    turnController.mouseUp()
 })
 
 document.addEventListener('mousemove', (event) => {
@@ -244,43 +214,36 @@ document.addEventListener('mousemove', (event) => {
         const x = event.clientX / window.innerWidth * 2 - 1;
         const y = (window.innerHeight - event.clientY) / window.innerHeight * 2 - 1
         const pointer = new THREE.Vector2(x, y);
-        turn_controller.mouseMove(pointer)
+        turnController.mouseMove(pointer)
     }
 })
 
 document.addEventListener('keydown', (event) => {
-    if (active_turn) {
-        return
-    }
     switch (event.key) {
         case 'w':
-            active_turn = TurnRegistry.AU
+            turnController.startTurn(TurnRegistry.AU)
             break
         case 's':
-            active_turn = TurnRegistry.AU
+            turnController.startTurn(TurnRegistry.AU)
             break
         case 'q':
-            active_turn = TurnRegistry.AF
+            turnController.startTurn(TurnRegistry.AF)
             break
         case 'e':
-            active_turn = TurnRegistry.AF
+            turnController.startTurn(TurnRegistry.AF)
             break
         case 'a':
-            active_turn = TurnRegistry.O
+            turnController.startTurn(TurnRegistry.I)
             break
         case 'd':
-            active_turn = TurnRegistry.I
+            turnController.startTurn(TurnRegistry.O)
             break
         case 'p':
-            turn_controller.scramble()
+            turnController.scramble()
             break
         case 'o':
-            turn_controller.gyro()
+            turnController.gyro()
             break
-    }
-    if (active_turn) {
-        active_turn.scene = scene
-        active_turn.start(cube)
     }
 });
 

@@ -1,4 +1,4 @@
-import {Group, Quaternion, Vector2, Vector3} from "three";
+import {Group, Quaternion, type Scene, Vector2, Vector3} from "three";
 import {Cube, CubeFace, Cubie, Sticker} from "./cube.ts";
 import {Vectors} from "./vector_math.ts";
 import {Game} from "./game.ts";
@@ -23,7 +23,7 @@ export class Turn implements ITurn {
 
     direction: number = 1
 
-    public constructor(axis, origin, stepSize, filter) {
+    public constructor(axis: Vector3, origin: Vector3, stepSize: number, filter: CubieSelector) {
         this.filter = filter
         this.angle = 0
         this.stepRadians = Math.PI/2 * stepSize
@@ -170,14 +170,14 @@ class StickerInterpolator {
         }
     }
 
-    public tick(dt) {
+    public tick(dt: number) {
         if (this.endingRotation) {
             this.sticker.cube.setRotationFromQuaternion(new Quaternion().slerpQuaternions(this.startingRotation, this.endingRotation, dt))
         }
     }
 
     public stop() {
-        this.sticker.update(this.finalPosition, this.finalOffset)
+        this.sticker.update(this.finalPosition, this.finalOffset!)
     }
 }
 
@@ -231,6 +231,7 @@ class Gyro implements ITurn {
     components: GyroComponent[]
     ticks: number = 0
     maxTicks: number = 2
+    direction: number = 1
 
     constructor() {
         this.components = []
@@ -243,7 +244,7 @@ class Gyro implements ITurn {
     }
 
     setDirection(direction: number) {
-
+        this.direction = direction
     }
 
     public done() {
@@ -323,7 +324,7 @@ export class TurnController {
     _scramble_remaining = 0;
     _scramble_prev_axis = Vectors.zero();
 
-    constructor(scene, cube: Cube) {
+    constructor(scene: Scene, cube: Cube) {
         this.scene = scene
         this.cube = cube
     }
@@ -350,7 +351,7 @@ export class TurnController {
         this.shift = enabled
     }
 
-    public clickStart(sticker: Sticker, position: Vector2, leftClick: boolean, rightClick: boolean) {
+    public clickStart(sticker: Sticker, position: Vector2, leftClick: boolean) {
         if (this.turning) return
 
         this.turning = false
@@ -426,6 +427,7 @@ export class TurnController {
         }
     }
 
+    // @ts-ignore
     public mouseMove(position: Vector2) {
         if (!this.initialClick) return
 

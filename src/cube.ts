@@ -1,13 +1,19 @@
 import {VectorMath, Vectors} from "./vector_math.ts";
-import {Euler, Group, Quaternion, Vector3, Vector4} from "three";
-import {Object3D} from "three/src/core/Object3D";
-import {Game} from "./game.ts";
-import {RoundedBoxGeometry} from "three/examples/jsm/geometries/RoundedBoxGeometry";
+import {Group, Object3D, type Scene, Vector3, Vector4} from "three";
 import * as THREE from "three";
 import {Config} from "./config.ts";
+// @ts-ignore
+import {RoundedBoxGeometry} from "three/examples/jsm/geometries/RoundedBoxGeometry";
 
-export enum CubeFace {
-    U, D, F, B, L, R, A, K
+export class CubeFace {
+    static U = "U"
+    static D = "D"
+    static F = "F"
+    static B = "B"
+    static L = "L"
+    static R = "R"
+    static A = "A" // -x
+    static K = "K" // +x
 }
 
 export function CubeAxisFromFace(face: CubeFace) {
@@ -47,7 +53,7 @@ export class Cube {
     public anna: Vector3
     public kata: Vector3
     public cubies: Cubie[] = []
-    constructor(scene) {
+    constructor(scene: Scene) {
         const config = Config.config()
         this.root = new Group()
         this.anna = new Vector3(-config.w_center_x, 0, 0)
@@ -117,14 +123,13 @@ export class Sticker {
     offset: Vector3
     cube: Object3D
 
-    constructor(cubie: Cubie, parent: Group, position: Vector3, color, offset: Vector3) {
+    constructor(cubie: Cubie, parent: Group, position: Vector3, color: number, offset: Vector3) {
         this.cubie = cubie
         this.color = color
         this.position = position
         this.offset = offset
-        this.cube = createCube(parent, position, color, offset);
+        this.cube = createCube(parent, position, color);
         this.update(position, offset)
-        //this.setRotation(Config.config()._h_angle_rad);
     }
 
     onClick(): void {
@@ -233,7 +238,7 @@ export class Sticker {
     }
 }
 
-function createCube(parent, direction, faceColor, offset=null) {
+function createCube(parent: Object3D, direction: Vector3, faceColor: number) {
     const config = Config.config();
     const pivot = new Group()
     const geometry = new RoundedBoxGeometry(config.cube_size, config.cube_size, config.cube_size, 2, 0.18)
@@ -270,7 +275,7 @@ const colors = {
     minus_z: 0x00ff00, // Green
 };
 
-function getColor({x = 0, y = 0, z = 0, w= 0}) {
+function getColor({x = 0, y = 0, z = 0, w= 0}): number {
     if (x == 1) {
         return colors.plus_x
     }
@@ -295,4 +300,5 @@ function getColor({x = 0, y = 0, z = 0, w= 0}) {
     if (w == -1) {
         return colors.minus_w
     }
+    return 0
 }
