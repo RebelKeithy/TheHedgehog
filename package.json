@@ -1,0 +1,23 @@
+{
+  "name": "rubiks",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/three": "^0.179.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.2"
+  },
+  "dependencies": {
+    "gl-vignette-background": "^2.0.1",
+    "three": "^0.179.1",
+    "three-background": "^0.2.1",
+    "three-vignette-background": "^1.0.3",
+    "three-vignette-background-esm": "^1.0.1"
+  }
+}

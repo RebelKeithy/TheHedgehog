@@ -1,0 +1,298 @@
+import {VectorMath, Vectors} from "./vector_math.ts";
+import {Euler, Group, Quaternion, Vector3, Vector4} from "three";
+import {Object3D} from "three/src/core/Object3D";
+import {Game} from "./game.ts";
+import {RoundedBoxGeometry} from "three/examples/jsm/geometries/RoundedBoxGeometry";
+import * as THREE from "three";
+import {Config} from "./config.ts";
+
+export enum CubeFace {
+    U, D, F, B, L, R, A, K
+}
+
+export function CubeAxisFromFace(face: CubeFace) {
+    switch (face) {
+        case CubeFace.U: return Vectors.up()
+        case CubeFace.D: return Vectors.down()
+        case CubeFace.F: return Vectors.front()
+        case CubeFace.B: return Vectors.back()
+        case CubeFace.L: return Vectors.left()
+        case CubeFace.R: return Vectors.right()
+        case CubeFace.A: return Vectors.zero()
+        case CubeFace.K: return Vectors.zero()
+    }
+}
+
+const CubePosition = {
+    RUBA: new Vector4( 1,  1,  1,  1),
+    RUBK: new Vector4( 1,  1,  1, -1),
+    RUFA: new Vector4( 1,  1,  -1,  1),
+    RUFK: new Vector4( 1,  1,  -1, -1),
+    RDBA: new Vector4( 1,  -1,  1,  1),
+    RDBK: new Vector4( 1,  -1,  1, -1),
+    RDFA: new Vector4( 1,  -1,  -1,  1),
+    RDFK: new Vector4( 1,  -1,  -1, -1),
+    LUBA: new Vector4( -1,  1,  1,  1),
+    LUBK: new Vector4( -1,  1,  1, -1),
+    LUFA: new Vector4( -1,  1,  -1,  1),
+    LUFK: new Vector4( -1,  1,  -1, -1),
+    LDBA: new Vector4( -1,  -1,  1,  1),
+    LDBK: new Vector4( -1,  -1,  1, -1),
+    LDFA: new Vector4( -1,  -1,  -1,  1),
+    LDFK: new Vector4( -1,  -1,  -1, -1),
+}
+
+export class Cube {
+    public root: Group
+    public anna: Vector3
+    public kata: Vector3
+    public cubies: Cubie[] = []
+    constructor(scene) {
+        const config = Config.config()
+        this.root = new Group()
+        this.anna = new Vector3(-config.w_center_x, 0, 0)
+        this.kata = new Vector3(config.w_center_x, 0, 0)
+
+        Object.values(CubePosition).forEach((position) => {
+            const cubie = new Cubie(position)
+            this.root.add(cubie.pivot)
+            this.cubies.push(cubie)
+            if (position.w == 1) {
+                cubie.pivot.position.x -= config.w_center_x
+            } else {
+                cubie.pivot.position.x += config.w_center_x
+            }
+        })
+        scene.add(this.root)
+    }
+}
+
+export class Cubie {
+    public pivot: Group
+    public position: Vector4
+    public stickers: Sticker[] = []
+    private static _worldPos = new Vector3(0, 0, 0)
+
+    constructor(position: Vector4) {
+        this.position = position
+        const p = new Vector3(position.x, position.y, position.z)
+        const w = position.w
+        this.pivot = new Group()
+        this.pivot.position.copy(p).multiplyScalar(Config.config().cube_size + Config.config().cubie_gap/2);
+        const c0 = new Sticker(this, this.pivot, p, getColor({w: w}), new Vector3(0, 0, 0))
+        const c1 = new Sticker(this, this.pivot, p, getColor({x: w*p.x}), VectorMath.projX(p))
+        const c2 = new Sticker(this, this.pivot, p, getColor({y: p.y}), VectorMath.projY(p))
+        const c3 = new Sticker(this, this.pivot, p, getColor({z: p.z}), VectorMath.projZ(p))
+        this.stickers.push(c0, c1, c2, c3)
+    }
+
+    inLayer(layer: CubeFace): boolean {
+        this.pivot.getWorldPosition(Cubie._worldPos)
+        switch(layer) {
+            case CubeFace.U:
+                return Cubie._worldPos.y > 0
+            case CubeFace.D:
+                return Cubie._worldPos.y < 0
+            case CubeFace.B:
+                return Cubie._worldPos.z > 0
+            case CubeFace.F:
+                return Cubie._worldPos.z < 0
+            case CubeFace.L:
+                return Math.abs(Cubie._worldPos.x) > Config.config().w_center_x
+            case CubeFace.R:
+                return Math.abs(Cubie._worldPos.x) < Config.config().w_center_x
+            case CubeFace.A:
+                return Cubie._worldPos.x < 0
+            case CubeFace.K:
+                return Cubie._worldPos.x > 0
+        }
+        throw Error()
+    }
+}
+
+export class Sticker {
+    cubie: Cubie
+    color: number
+    position: Vector3
+    offset: Vector3
+    cube: Object3D
+
+    constructor(cubie: Cubie, parent: Group, position: Vector3, color, offset: Vector3) {
+        this.cubie = cubie
+        this.color = color
+        this.position = position
+        this.offset = offset
+        this.cube = createCube(parent, position, color, offset);
+        this.update(position, offset)
+        //this.setRotation(Config.config()._h_angle_rad);
+    }
+
+    onClick(): void {
+        console.log(`Sticker: Clicked ${this.getFace()}`)
+    }
+
+    getFace(): CubeFace {
+        const config = Config.config()
+        const pivotPos = this.cubie.pivot.getWorldPosition(new Vector3())
+        const stickerPos = this.cube.children[0].getWorldPosition(new Vector3())
+        const offset = VectorMath.argmax(stickerPos.clone().sub(pivotPos)).normalize()
+        if (-config.cube_size/2 - config.cubie_pos < stickerPos.y && stickerPos.y < config.cube_size/2 + config.cubie_gap &&
+            -config.cube_size/2 - config.cubie_pos < stickerPos.z && stickerPos.z < config.cube_size/2 + config.cubie_gap &&
+            -config.w_center_x -config.cube_size/2 - config.cubie_pos < stickerPos.x && stickerPos.x < -config.w_center_x + config.cube_size/2 + config.cubie_gap) {
+            return CubeFace.A
+        }
+        if (-config.cube_size/2 - config.cubie_pos < stickerPos.y && stickerPos.y < config.cube_size/2 + config.cubie_gap &&
+            -config.cube_size/2 - config.cubie_pos < stickerPos.z && stickerPos.z < config.cube_size/2 + config.cubie_gap &&
+            config.w_center_x -config.cube_size/2 - config.cubie_pos < stickerPos.x && stickerPos.x < config.w_center_x + config.cube_size/2 + config.cubie_gap) {
+            return CubeFace.K
+        }
+        if (offset.y > 0.5) {
+            return CubeFace.U
+        }
+        if (offset.y < -0.5) {
+            return CubeFace.D
+        }
+        if (offset.z > 0.5) {
+            return CubeFace.B
+        }
+        if (offset.z < -0.5) {
+            return CubeFace.F
+        }
+        if (offset.x > 0.5) {
+            if (this.cube.getWorldPosition(new Vector3).x > 0) {
+                return CubeFace.L
+            } else {
+                return CubeFace.R
+            }
+        }
+        if (offset.x < -0.5) {
+            if (this.cube.getWorldPosition(new Vector3).x < 0) {
+                return CubeFace.L
+            } else {
+                return CubeFace.R
+            }
+        }
+        throw Error("Could not compute face for sticker")
+    }
+
+    unification() {
+        const config = Config.config()
+        const layer_center = new Vector3(config.w_center_x, 0, 0)
+        const anna = this.cubie.inLayer(CubeFace.A)
+        if(anna) {
+            layer_center.setX(-config.w_center_x)
+        }
+        const p = this.cubie.pivot.getWorldPosition(new Vector3()).sub(layer_center)
+        this.position = VectorMath.unify(p)
+        const face = this.getFace()
+        switch (face) {
+            case CubeFace.U:
+                this.offset = Vectors.up()
+                break
+            case CubeFace.D:
+                this.offset = Vectors.down()
+                break
+            case CubeFace.F:
+                this.offset = Vectors.front()
+                break
+            case CubeFace.B:
+                this.offset = Vectors.back()
+                break
+            case CubeFace.L:
+                this.offset = anna ? Vectors.left() : Vectors.right()
+                break
+            case CubeFace.R:
+                this.offset = anna ? Vectors.right() : Vectors.left()
+                break
+            default:
+                this.offset = Vectors.zero()
+        }
+        this.update(this.position, this.offset)
+        console.log(this.position)
+        console.log(this.offset)
+    }
+
+    update(position: Vector3, offset: Vector3) {
+        const config = Config.config();
+        this.position = position.clone()
+        this.offset = offset
+        const nonOffset: Vector3 = position.clone().multiplyScalar(-config.cube_size/2)
+        this.cube.children[0].position.copy(nonOffset)
+        this.cube.children[1].position.copy(nonOffset)
+        if (offset) {
+            this.cube.children[0].position.add(offset.clone().multiplyScalar(config.cube_size))
+            this.cube.children[1].position.add(offset.clone().multiplyScalar(config.cube_size))
+        }
+        console.log(this.cube.children[0].getWorldPosition(new Vector3()))
+        this.setRotation(config._h_angle_rad)
+    }
+
+    setRotation(angle: number) {
+        const a = new Vector3().crossVectors(this.offset, this.position)
+        this.cube.setRotationFromAxisAngle(a.normalize(), angle)
+    }
+}
+
+function createCube(parent, direction, faceColor, offset=null) {
+    const config = Config.config();
+    const pivot = new Group()
+    const geometry = new RoundedBoxGeometry(config.cube_size, config.cube_size, config.cube_size, 2, 0.18)
+    const geometry2 = new RoundedBoxGeometry(config.cube_size * 0.99, config.cube_size * 0.99, config.cube_size * 0.99, 2, 0.1)
+    //const geometry = new THREE.BoxGeometry(CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE);
+    const material = new THREE.MeshStandardMaterial({ color: faceColor, opacity: 0.1, roughness: 0.7, metalness: 0.1 });
+    const material2 = new THREE.MeshStandardMaterial({ color: 0x000000, opacity: 0.9, roughness: 0.1, metalness: 0.1 });
+    const cubie = new THREE.Mesh(geometry, material);
+    const cubie2 = new THREE.Mesh(geometry2, material2);
+    pivot.position.copy(direction).multiplyScalar(config.cubie_pos)
+    // cubie.position.copy(direction).multiplyScalar(config.cube_size/2 + config.cubie_gap/2)
+    // cubie2.position.copy(direction).multiplyScalar(config.cube_size/2 + config.cubie_gap/2)
+    // if (offset) {
+    //     cubie.position.add(offset.clone().multiplyScalar(config.cube_size))
+    //     cubie2.position.add(offset.clone().multiplyScalar(config.cube_size))
+    // }
+    pivot.attach(cubie)
+    pivot.attach(cubie2)
+    parent.attach(pivot)
+    return pivot
+}
+
+
+
+// === 4D Cube Representation ===
+const colors = {
+    plus_w:  0x800080, // Purple
+    minus_w: 0xff88aa, // Pink
+    plus_x:  0xff0000, // Red
+    minus_x: 0xffa500, // Orange
+    plus_y:  0xffffff, // White
+    minus_y: 0xffff00, // Yellow
+    plus_z:  0x0000ff, // Blue
+    minus_z: 0x00ff00, // Green
+};
+
+function getColor({x = 0, y = 0, z = 0, w= 0}) {
+    if (x == 1) {
+        return colors.plus_x
+    }
+    if (x == -1) {
+        return colors.minus_x
+    }
+    if (y == 1) {
+        return colors.plus_y
+    }
+    if (y == -1) {
+        return colors.minus_y
+    }
+    if (z == 1) {
+        return colors.plus_z
+    }
+    if (z == -1) {
+        return colors.minus_z
+    }
+    if (w == 1) {
+        return colors.plus_w
+    }
+    if (w == -1) {
+        return colors.minus_w
+    }
+}
