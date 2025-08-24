@@ -1,29 +1,43 @@
 import {Group, Quaternion, Vector2, Vector3} from "three";
-import {CubeFace, Cubie, Sticker} from "./cube.ts";
+import {Cube, CubeFace, Cubie, Sticker} from "./cube.ts";
 import {Vectors} from "./vector_math.ts";
 import {Game} from "./game.ts";
 import {Config} from "./config.ts";
 
 
-export class Turn {
-    filter
+export interface ITurn {
+    begin: () => void;
+    end: () => void;
+    done: () => boolean;
+    setDirection: (direction: number) => void;
+    tick: (dt: number) => void;
+}
+
+export class Turn implements ITurn {
+    filter: CubieSelector
     angle: number
-    stepAngle: number
+    stepRadians: number
     axis: Vector3
     public root: Group
     targets: any[]
 
+    direction: number = 1
+
     public constructor(axis, origin, stepSize, filter) {
         this.filter = filter
         this.angle = 0
-        this.stepAngle = Math.PI/2 * stepSize
+        this.stepRadians = Math.PI/2 * stepSize
         this.axis = axis
         this.root = new Group()
         this.root.position.copy(origin)
         this.targets = []
     }
 
-    start() {
+    setDirection(direction: number) {
+        this.direction = direction
+    }
+
+    begin() {
         this.angle = 0
         const rp = this.root.position.clone()
         this.root = new Group()
@@ -38,13 +52,13 @@ export class Turn {
         Game.game().scene.add(this.root)
     }
 
-    update(da) {
-        this.angle += da;
+    tick(da: number) {
+        this.angle += da * this.direction;
         this.root.setRotationFromAxisAngle(this.axis, this.angle)
     }
 
-    stop() {
-        this.angle = Math.round(this.angle / (Math.PI / 2)) * (Math.PI/2)
+    end() {
+        this.angle = Math.round(this.angle / (Math.PI / 2)) * (Math.PI/2);
         this.root.setRotationFromAxisAngle(this.axis, this.angle)
 
         const cube = Game.game().cube
@@ -64,14 +78,18 @@ export class Turn {
         })
         this.targets = []
     }
+
+    done() {
+        return Math.abs(this.angle) >= this.stepRadians
+    }
 }
 
 
 class StickerInterpolator {
     sticker: Sticker
     startingRotation: Quaternion
-    endingRotation: Quaternion
-    finalOffset: Vector3
+    endingRotation?: Quaternion
+    finalOffset?: Vector3
     finalPosition: Vector3
 
     constructor(sticker: Sticker) {
@@ -152,9 +170,9 @@ class StickerInterpolator {
         }
     }
 
-    public tick(t) {
+    public tick(dt) {
         if (this.endingRotation) {
-            this.sticker.cube.setRotationFromQuaternion(new Quaternion().slerpQuaternions(this.startingRotation, this.endingRotation, t))
+            this.sticker.cube.setRotationFromQuaternion(new Quaternion().slerpQuaternions(this.startingRotation, this.endingRotation, dt))
         }
     }
 
@@ -209,45 +227,51 @@ class GyroComponent {
     }
 }
 
-class Gyro {
-    components: [GyroComponent]
+class Gyro implements ITurn {
+    components: GyroComponent[]
     ticks: number = 0
-    maxTicks: number = 40
+    maxTicks: number = 2
 
     constructor() {
         this.components = []
-        //this.components.push(new GyroComponent(Game.game().cube.cubies[0]))
-        Game.game().cube.cubies.forEach((c) => {
-            this.components.push(new GyroComponent(c))
-        })
     }
 
-    public tick() {
+    public tick(dt: number) {
         console.log(this.ticks/this.maxTicks)
-        this.ticks++
+        this.ticks += dt
         this.components.forEach((c) => c.update(Math.min(1, this.ticks/this.maxTicks)))
+    }
+
+    setDirection(direction: number) {
+
     }
 
     public done() {
         return this.ticks >= this.maxTicks
     }
 
-    public stop() {
+    public begin() {
+        Game.game().cube.cubies.forEach((c) => {
+            this.components.push(new GyroComponent(c))
+        })
+    }
+
+    public end() {
         this.components.forEach((c) => c.stop())
     }
 }
 
-type SliceSelector = (c) => boolean
+type CubieSelector = (c: Cubie) => boolean
 
 export class SliceSelectors {
-    static U: SliceSelector = (c) => c.inLayer(CubeFace.U)
-    static D: SliceSelector = (c) => c.inLayer(CubeFace.D)
-    static F: SliceSelector = (c) => c.inLayer(CubeFace.F)
-    static B: SliceSelector = (c) => c.inLayer(CubeFace.B)
-    static K: SliceSelector = (c) => c.inLayer(CubeFace.K)
-    static A: SliceSelector = (c) => c.inLayer(CubeFace.A)
-    static O: SliceSelector = (c) => c.inLayer(CubeFace.L)
-    static I: SliceSelector = (c) => c.inLayer(CubeFace.R)
+    static U: CubieSelector = (c) => c.inLayer(CubeFace.U)
+    static D: CubieSelector = (c) => c.inLayer(CubeFace.D)
+    static F: CubieSelector = (c) => c.inLayer(CubeFace.F)
+    static B: CubieSelector = (c) => c.inLayer(CubeFace.B)
+    static K: CubieSelector = (c) => c.inLayer(CubeFace.K)
+    static A: CubieSelector = (c) => c.inLayer(CubeFace.A)
+    static O: CubieSelector = (c) => c.inLayer(CubeFace.L)
+    static I: CubieSelector = (c) => c.inLayer(CubeFace.R)
 }
 
 export class TurnRegistry {
@@ -282,14 +306,14 @@ export class TurnRegistry {
 
 export class TurnController {
     scene: any
-    cube: any
-    turning: boolean
+    cube: Cube
+    turning: boolean = false
     _gyro?: Gyro
     initialClick?: Vector2
-    sticker: Sticker
-    turn?: Turn
-    direction: number
-    shift: boolean
+    sticker?: Sticker
+    turn?: ITurn
+    direction: number = 1
+    shift: boolean = false
 
     turn_mode: string = "click"
 
@@ -299,7 +323,7 @@ export class TurnController {
     _scramble_remaining = 0;
     _scramble_prev_axis = Vectors.zero();
 
-    constructor(scene, cube) {
+    constructor(scene, cube: Cube) {
         this.scene = scene
         this.cube = cube
     }
@@ -312,15 +336,21 @@ export class TurnController {
 
     public gyro() {
         if (!this._gyro) {
-            this._gyro = new Gyro()
+            this.startTurn(new Gyro())
         }
+    }
+
+    public startTurn(turn: ITurn) {
+        this.turn = turn
+        this.turning = true
+        this.turn.begin()
     }
 
     public setShift(enabled: boolean) {
         this.shift = enabled
     }
 
-    public clickStart(sticker, position: Vector2, leftClick: boolean, rightClick: boolean) {
+    public clickStart(sticker: Sticker, position: Vector2, leftClick: boolean, rightClick: boolean) {
         if (this.turning) return
 
         this.turning = false
@@ -328,8 +358,8 @@ export class TurnController {
         this.initialClick = position
 
         if (this.turn_mode == "click") {
-            const face = this.sticker.getFace()
-            const kata = this.sticker.cubie.inLayer(CubeFace.K)
+            const face = this.sticker!.getFace()
+            const kata = this.sticker!.cubie.inLayer(CubeFace.K)
             this.turn = undefined
             this.direction = leftClick ? 1 : -1
             switch(face) {
@@ -389,7 +419,8 @@ export class TurnController {
                     break
             }
             if (this.turn) {
-                this.turn.start()
+                this.turn.setDirection(this.direction)
+                this.turn.begin()
                 this.turning = true
             }
         }
@@ -475,17 +506,17 @@ export class TurnController {
         }
     }
 
-    public tick() {
-        if (this._gyro) {
-            console.log("updating gyro")
-            this._gyro.tick()
-            if (this._gyro.done()) {
-                this._gyro.stop()
-                this._gyro = undefined
-                console.log("gyro done")
-            }
-            return
-        }
+    public tick(dt: number = 1/60) {
+        // if (this._gyro) {
+        //     console.log("updating gyro")
+        //     this._gyro.tick(dt)
+        //     if (this._gyro.done()) {
+        //         this._gyro.end()
+        //         this._gyro = undefined
+        //         console.log("gyro done")
+        //     }
+        //     return
+        // }
 
         if (this.scrambling && !this.turning) {
             this._scramble_remaining--
@@ -496,23 +527,26 @@ export class TurnController {
             this.direction = 1
             this.turning = true
             if (Math.random() > 0.9) {
-                this._gyro = new Gyro()
+                this.turn = new Gyro()
+                this.turn.begin()
             } else {
-                this.turn = TurnRegistry.random()
+                let turn = TurnRegistry.random()
                 if (this._scramble_prev_axis) {
-                    while (Math.abs(this.turn.axis.dot(this._scramble_prev_axis)) > 0.99) {
-                        this.turn = TurnRegistry.random()
+                    while (Math.abs(turn.axis.dot(this._scramble_prev_axis)) > 0.99) {
+                        turn = TurnRegistry.random()
                     }
                 }
-                this._scramble_prev_axis = this.turn.axis
-                this.turn.start()
+                this._scramble_prev_axis = turn.axis
+                this.turn = turn
+                this.turn.begin()
             }
         }
 
         if(this.turning && this.turn) {
-            this.turn.update(0.05 * this.direction * this.speed)
-            if (Math.abs(this.turn.angle) > this.turn.stepAngle) {
-                this.turn.stop()
+            this.turn.tick(dt * this.speed)
+            if (this.turn.done()) {
+                this.turn.end()
+                this.turn = undefined
                 this.turning = false
             }
         }
