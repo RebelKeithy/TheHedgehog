@@ -189,9 +189,15 @@ document.addEventListener('mousedown', (event) => {
 })
 
 document.addEventListener('keydown', (event) => {
+    console.log(event.key)
     if (event.key == 'Shift') {
         if (turnController) {
             turnController.setShift(true)
+        }
+    }
+    if (event.key == 'Control') {
+        if(turnController) {
+            turnController.ctrl = true
         }
     }
 })
@@ -200,6 +206,11 @@ document.addEventListener('keyup', (event) => {
     if (event.key == 'Shift') {
         if (turnController) {
             turnController.setShift(false)
+        }
+    }
+    if (event.key == 'Control') {
+        if(turnController) {
+            turnController.ctrl = false
         }
     }
 })

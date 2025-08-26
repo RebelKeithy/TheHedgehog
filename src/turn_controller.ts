@@ -1,279 +1,12 @@
-import {Group, Quaternion, type Scene, Vector2, Vector3} from "three";
-import {Cube, CubeFace, Cubie, Sticker} from "./cube.ts";
+import {type Scene, Vector2, Vector3} from "three";
+import {Cube, CubeFace, Sticker} from "./cube.ts";
 import {Vectors} from "./vector_math.ts";
-import {Game} from "./game.ts";
 import {Config} from "./config.ts";
-
-
-export interface ITurn {
-    begin: () => void;
-    end: () => void;
-    done: () => boolean;
-    setDirection: (direction: number) => void;
-    tick: (dt: number) => void;
-}
-
-export class Turn implements ITurn {
-    filter: CubieSelector
-    angle: number
-    stepRadians: number
-    axis: Vector3
-    public root: Group
-    targets: any[]
-
-    direction: number = 1
-
-    public constructor(axis: Vector3, origin: Vector3, stepSize: number, filter: CubieSelector) {
-        this.filter = filter
-        this.angle = 0
-        this.stepRadians = Math.PI/2 * stepSize
-        this.axis = axis
-        this.root = new Group()
-        this.root.position.copy(origin)
-        this.targets = []
-    }
-
-    setDirection(direction: number) {
-        this.direction = direction
-    }
-
-    begin() {
-        this.angle = 0
-        const rp = this.root.position.clone()
-        this.root = new Group()
-        this.root.position.copy(rp)
-        this.root.setRotationFromAxisAngle(this.axis, this.angle)
-        Game.game().cube.cubies.forEach(c => {
-            if (this.filter(c)) {
-                this.root.attach(c.pivot)
-                this.targets.push(c)
-            }
-        })
-        Game.game().scene.add(this.root)
-    }
-
-    tick(da: number) {
-        this.angle += da * this.direction;
-        this.root.setRotationFromAxisAngle(this.axis, this.angle)
-    }
-
-    end() {
-        this.angle = Math.round(this.angle / (Math.PI / 2)) * (Math.PI/2);
-        this.root.setRotationFromAxisAngle(this.axis, this.angle)
-
-        const cube = Game.game().cube
-        this.targets.forEach((c) => {
-            cube.root.attach(c.pivot)
-        })
-        this.root.clear()
-        cube.cubies.forEach((c) => {
-            c.stickers.forEach((s) => {
-                s.unification()
-            })
-        })
-        cube.cubies.forEach((c) => {
-            c.stickers.forEach((s) => {
-                s.cubie.pivot.setRotationFromQuaternion(new Quaternion())
-            })
-        })
-        this.targets = []
-    }
-
-    done() {
-        return Math.abs(this.angle) >= this.stepRadians
-    }
-}
-
-
-class StickerInterpolator {
-    sticker: Sticker
-    startingRotation: Quaternion
-    endingRotation?: Quaternion
-    finalOffset?: Vector3
-    finalPosition: Vector3
-
-    constructor(sticker: Sticker) {
-        const config = Config.config()
-        this.sticker = sticker
-        this.startingRotation = new Quaternion().setFromEuler(sticker.cube.rotation)
-        const face = sticker.getFace()
-        const anna = sticker.cubie.inLayer(CubeFace.A)
-        const outer = sticker.cubie.inLayer(CubeFace.L)
-        const up = sticker.cubie.inLayer(CubeFace.U)
-        const front = sticker.cubie.inLayer(CubeFace.F)
-        this.finalPosition = sticker.position.clone()
-
-        if (this.finalPosition.x == 1)
-            this.finalPosition.setX(-1)
-        else if (this.finalPosition.x == -1)
-            this.finalPosition.setX(1)
-
-
-        if (anna && outer || !anna && !outer) {
-            if (face == CubeFace.A || face == CubeFace.K) {
-                this.finalOffset = Vectors.right()
-            }
-            if (face == CubeFace.L || face == CubeFace.R) {
-                this.finalOffset = Vectors.zero()
-            }
-        } else {
-            if (face == CubeFace.A || face == CubeFace.K) {
-                this.finalOffset = Vectors.left()
-            }
-            if (face == CubeFace.L || face == CubeFace.R) {
-                this.finalOffset = Vectors.zero()
-            }
-        }
-
-        if (!this.finalOffset) {
-            this.finalOffset = sticker.offset.clone()
-        }
-
-        if (anna && outer || !anna && !outer) {
-            console.log("UPDATING STICKER " + face)
-            if (face == CubeFace.A || face == CubeFace.K) {
-                const axis = new Vector3(1, 0, 0).cross(this.sticker.cubie.pivot.position).normalize()
-                this.endingRotation = new Quaternion().setFromAxisAngle(axis, config._h_angle_rad)
-            }
-            if (face == CubeFace.L || face == CubeFace.R) {
-                this.endingRotation = new Quaternion()
-            }
-            if (face == CubeFace.U || face == CubeFace.D) {
-                const axis = Vectors.up().cross(this.sticker.cube.children[0].position).cross(Vectors.up()).normalize()
-                const swap = front && up || !front && !up
-                this.endingRotation = new Quaternion().setFromAxisAngle(new Vector3(0, 0, up ? 1 : -1), Math.PI/2).premultiply(new Quaternion().setFromAxisAngle(axis, config._h_angle_rad * (swap ? -1 : 1)))
-            }
-            if (face == CubeFace.F || face == CubeFace.B) {
-                const axis = Vectors.back().cross(this.sticker.cube.children[0].position).cross(Vectors.back()).normalize()
-                const swap = front && up || !front && !up
-                this.endingRotation = new Quaternion().setFromAxisAngle(new Vector3(0, front ? 1 : -1, 0), Math.PI/2).premultiply(new Quaternion().setFromAxisAngle(axis, config._h_angle_rad * (swap ? 1 : -1)))
-            }
-
-        } else {
-            if (face == CubeFace.A || face == CubeFace.K) {
-                const axis = new Vector3(1, 0, 0).cross(this.sticker.cubie.pivot.position).normalize()
-                this.endingRotation = new Quaternion().setFromAxisAngle(axis, -config._h_angle_rad)
-            }
-            if (face == CubeFace.L || face == CubeFace.R) {
-                this.endingRotation = new Quaternion()
-            }
-            if (face == CubeFace.U || face == CubeFace.D) {
-                const axis = Vectors.up().cross(this.sticker.cube.children[0].position).cross(Vectors.up()).normalize()
-                const swap = front && up || !front && !up
-                this.endingRotation = new Quaternion().setFromAxisAngle(new Vector3(0, 0, up ? -1 : 1), Math.PI/2).premultiply(new Quaternion().setFromAxisAngle(axis, -config._h_angle_rad * (swap ? -1 : 1)))
-            }
-            if (face == CubeFace.F || face == CubeFace.B) {
-                const axis = Vectors.back().cross(this.sticker.cube.children[0].position).cross(Vectors.back()).normalize()
-                const swap = front && up || !front && !up
-                this.endingRotation = new Quaternion().setFromAxisAngle(new Vector3(0, front ? -1 : 1, 0), Math.PI/2).premultiply(new Quaternion().setFromAxisAngle(axis, -config._h_angle_rad * (swap ? 1 : -1)))
-            }
-        }
-    }
-
-    public tick(dt: number) {
-        if (this.endingRotation) {
-            this.sticker.cube.setRotationFromQuaternion(new Quaternion().slerpQuaternions(this.startingRotation, this.endingRotation, dt))
-        }
-    }
-
-    public stop() {
-        this.sticker.update(this.finalPosition, this.finalOffset!)
-    }
-}
-
-
-class GyroComponent {
-    cubie: Cubie
-    startingPosition: Vector3
-    endPosition: Vector3
-    currentPosition: Vector3 = Vectors.zero()
-
-    stickerInterpolators: StickerInterpolator[] = []
-
-    constructor(cubie: Cubie) {
-        const config = Config.config()
-        const x0 = -config.w_center_x - config.cubie_gap/2 - config.cube_size
-        const x1 = -config.w_center_x + config.cubie_gap/2 + config.cube_size
-        const x2 = config.w_center_x - config.cubie_gap/2 - config.cube_size
-        const x3 = config.w_center_x + config.cubie_gap/2 + config.cube_size
-
-        this.cubie = cubie
-        this.startingPosition = cubie.pivot.position.clone()
-        if (cubie.inLayer(CubeFace.A)) {
-            if (cubie.inLayer(CubeFace.L)) {
-                // Moves from L to R side.
-                this.endPosition = this.startingPosition.clone().setX(x3)
-            } else {
-                this.endPosition = this.startingPosition.clone().setX(x0)
-            }
-        } else {
-            if (cubie.inLayer(CubeFace.R)) {
-                this.endPosition = this.startingPosition.clone().setX(x1)
-            } else {
-                this.endPosition = this.startingPosition.clone().setX(x2)
-            }
-        }
-        cubie.stickers.forEach((s) => this.stickerInterpolators.push(new StickerInterpolator(s)))
-    }
-
-    public update(t: number) {
-        this.currentPosition.lerpVectors(this.startingPosition.clone(), this.endPosition.clone(), t)
-        this.cubie.pivot.position.copy(this.currentPosition)
-        this.stickerInterpolators.forEach((s) => s.tick(t))
-    }
-
-    public stop() {
-        this.stickerInterpolators.forEach((s) => s.stop())
-    }
-}
-
-class Gyro implements ITurn {
-    components: GyroComponent[]
-    ticks: number = 0
-    maxTicks: number = 2
-    direction: number = 1
-
-    constructor() {
-        this.components = []
-    }
-
-    public tick(dt: number) {
-        console.log(this.ticks/this.maxTicks)
-        this.ticks += dt
-        this.components.forEach((c) => c.update(Math.min(1, this.ticks/this.maxTicks)))
-    }
-
-    setDirection(direction: number) {
-        this.direction = direction
-    }
-
-    public done() {
-        return this.ticks >= this.maxTicks
-    }
-
-    public begin() {
-        Game.game().cube.cubies.forEach((c) => {
-            this.components.push(new GyroComponent(c))
-        })
-    }
-
-    public end() {
-        this.components.forEach((c) => c.stop())
-    }
-}
-
-type CubieSelector = (c: Cubie) => boolean
-
-export class SliceSelectors {
-    static U: CubieSelector = (c) => c.inLayer(CubeFace.U)
-    static D: CubieSelector = (c) => c.inLayer(CubeFace.D)
-    static F: CubieSelector = (c) => c.inLayer(CubeFace.F)
-    static B: CubieSelector = (c) => c.inLayer(CubeFace.B)
-    static K: CubieSelector = (c) => c.inLayer(CubeFace.K)
-    static A: CubieSelector = (c) => c.inLayer(CubeFace.A)
-    static O: CubieSelector = (c) => c.inLayer(CubeFace.L)
-    static I: CubieSelector = (c) => c.inLayer(CubeFace.R)
-}
+import {type ITurn, SliceSelectors} from "./turns/iturn.ts";
+import {WRotation} from "./turns/wRotation.ts";
+import {Rotation} from "./turns/rotation.ts";
+import {Turn} from "./turns/turn.ts";
+import {Gyro} from "./turns/gyro.ts";
 
 export class TurnRegistry {
     static AR = new Turn(Vectors.left(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
@@ -315,6 +48,7 @@ export class TurnController {
     turn?: ITurn
     direction: number = 1
     shift: boolean = false
+    ctrl: boolean = false
 
     turn_mode: string = "click"
 
@@ -342,9 +76,11 @@ export class TurnController {
     }
 
     public startTurn(turn: ITurn) {
-        this.turn = turn
-        this.turning = true
-        this.turn.begin()
+        if (!this.turning) {
+            this.turn = turn
+            this.turning = true
+            this.turn.begin()
+        }
     }
 
     public setShift(enabled: boolean) {
@@ -363,9 +99,15 @@ export class TurnController {
             const kata = this.sticker!.cubie.inLayer(CubeFace.K)
             this.turn = undefined
             this.direction = leftClick ? 1 : -1
+            console.log(`shift=${this.shift} ctrl=${this.ctrl}`)
             switch(face) {
                 case CubeFace.U:
-                    if (this.shift) {
+                    if (this.shift && this.ctrl) {
+                        this.turn = WRotation.U
+                    }
+                    else if (this.ctrl) {
+                        this.turn = Rotation.U
+                    } else if (this.shift) {
                         this.turn = TurnRegistry.U
                     } else if (kata) {
                         this.turn = TurnRegistry.KU
@@ -374,7 +116,11 @@ export class TurnController {
                     }
                     break
                 case CubeFace.D:
-                    if (this.shift) {
+                    if (this.shift && this.ctrl) {
+                        this.turn = WRotation.D
+                    } else if (this.ctrl) {
+                        this.turn = Rotation.D
+                    } else if (this.shift) {
                         this.turn = TurnRegistry.D
                     } else if (kata) {
                         this.turn = TurnRegistry.KD
@@ -383,7 +129,11 @@ export class TurnController {
                     }
                     break
                 case CubeFace.F:
-                    if (this.shift) {
+                    if (this.shift && this.ctrl) {
+                        this.turn = Rotation.F
+                    } else if (this.ctrl) {
+                        this.turn = WRotation.F
+                    } else if (this.shift) {
                         this.turn = TurnRegistry.F
                     } else if (kata) {
                         this.turn = TurnRegistry.KF
@@ -392,7 +142,11 @@ export class TurnController {
                     }
                     break
                 case CubeFace.B:
-                    if (this.shift) {
+                    if (this.shift && this.ctrl) {
+                        this.turn = Rotation.B
+                    } else if (this.ctrl) {
+                        this.turn = WRotation.B
+                    } else if (this.shift) {
                         this.turn = TurnRegistry.B
                     } else if (kata) {
                         this.turn = TurnRegistry.KB
@@ -401,7 +155,12 @@ export class TurnController {
                     }
                     break
                 case CubeFace.L:
-                    if (this.shift) {
+                    if (this.shift && this.ctrl) {
+                        this.turn = Rotation.L
+                        this.turn.setDirection(kata ? -1 : 1)
+                    } else if (this.ctrl) {
+                        this.turn = new Gyro()
+                    } else if (this.shift) {
                         this.turn = TurnRegistry.O
                     } else if (kata) {
                         this.turn = TurnRegistry.KL
@@ -410,7 +169,12 @@ export class TurnController {
                     }
                     break
                 case CubeFace.R:
-                    if (this.shift) {
+                    if (this.shift && this.ctrl) {
+                        this.turn = Rotation.R
+                        this.turn.setDirection(kata ? -1 : 1)
+                    } else if (this.ctrl) {
+                        this.turn = new Gyro()
+                    } else if (this.shift) {
                         this.turn = TurnRegistry.I
                     } else if (kata) {
                         this.turn = TurnRegistry.KR
@@ -509,17 +273,6 @@ export class TurnController {
     }
 
     public tick(dt: number = 1/60) {
-        // if (this._gyro) {
-        //     console.log("updating gyro")
-        //     this._gyro.tick(dt)
-        //     if (this._gyro.done()) {
-        //         this._gyro.end()
-        //         this._gyro = undefined
-        //         console.log("gyro done")
-        //     }
-        //     return
-        // }
-
         if (this.scrambling && !this.turning) {
             this._scramble_remaining--
             if (this._scramble_remaining <= 0) {
@@ -553,5 +306,4 @@ export class TurnController {
             }
         }
     }
-
 }
