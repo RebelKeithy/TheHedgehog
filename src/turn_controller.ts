@@ -29,12 +29,14 @@ export class TurnRegistry {
     static I = new Turn(Vectors.right(), Vectors.zero(), 1, SliceSelectors.I)
     static O = new Turn(Vectors.left(), Vectors.zero(), 1, SliceSelectors.O)
 
-    static TURNS = [TurnRegistry.AR, TurnRegistry.AL, TurnRegistry.AU, TurnRegistry.AD, TurnRegistry.AF, TurnRegistry.AB,
+    static SCRAMBLE_TURNS = [TurnRegistry.AR, TurnRegistry.AL, TurnRegistry.AU, TurnRegistry.AD, TurnRegistry.AF, TurnRegistry.AB,
         TurnRegistry.KR, TurnRegistry.KL, TurnRegistry.KU, TurnRegistry.KD, TurnRegistry.KF, TurnRegistry.KB,
-        TurnRegistry.U, TurnRegistry.D, TurnRegistry.F, TurnRegistry.B, TurnRegistry.I, TurnRegistry.O
+        TurnRegistry.U, TurnRegistry.D, TurnRegistry.F, TurnRegistry.B, TurnRegistry.I, TurnRegistry.O,
+        WRotation.U, WRotation.D, WRotation.F, WRotation.B, WRotation.R, WRotation.L
     ]
-    public static random(): Turn {
-        return TurnRegistry.TURNS[Math.floor(Math.random() * TurnRegistry.TURNS.length)]
+
+    public static random(): ITurn {
+        return TurnRegistry.SCRAMBLE_TURNS[Math.floor(Math.random() * TurnRegistry.SCRAMBLE_TURNS.length)]
     }
 }
 
@@ -281,17 +283,19 @@ export class TurnController {
             }
             this.direction = 1
             this.turning = true
-            if (Math.random() > 0.9) {
+            if (Math.random() < 1 / TurnRegistry.SCRAMBLE_TURNS.length) {
                 this.turn = new Gyro()
                 this.turn.begin()
             } else {
                 let turn = TurnRegistry.random()
-                if (this._scramble_prev_axis) {
-                    while (Math.abs(turn.axis.dot(this._scramble_prev_axis)) > 0.99) {
+                if (this._scramble_prev_axis && turn.axis) {
+                    while (Math.abs(turn.axis!.dot(this._scramble_prev_axis)) > 0.99) {
                         turn = TurnRegistry.random()
                     }
+                    this._scramble_prev_axis = turn.axis!
+                } else if (turn.axis) {
+                    this._scramble_prev_axis = turn.axis
                 }
-                this._scramble_prev_axis = turn.axis
                 this.turn = turn
                 this.turn.begin()
             }

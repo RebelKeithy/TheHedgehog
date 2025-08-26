@@ -1,4 +1,5 @@
 import {CubeFace, Cubie} from "../cube.ts";
+import type {Vector3} from "three";
 
 export type CubieSelector = (c: Cubie) => boolean
 
@@ -8,6 +9,7 @@ export interface ITurn {
   done: () => boolean;
   setDirection: (direction: number) => void;
   tick: (dt: number) => void;
+  axis?: Vector3;
 }
 
 export class SliceSelectors {

@@ -21,8 +21,8 @@ function createVignetteBackground() {
             u_time: { value: 0.0 },
 
             // Look & feel controls
-            u_colorCenter: { value: new THREE.Color("#3a3a6a") },   // center color
-            u_colorEdge:   { value: new THREE.Color("#2a2a4a") },   // edge color
+            u_colorCenter: { value: new THREE.Color("#56567d") },   // center color
+            u_colorEdge:   { value: new THREE.Color("#393945") },   // edge color
 
             u_vignetteRadius:   { value: 0.0 },  // where darkening begins (0..1 from center)
             u_vignetteSoftness: { value: 0.0 },   // how soft the falloff is
@@ -141,6 +141,13 @@ function init() {
     cube = new Cube(scene)
     new Game(config, scene, cube)
     turnController = new TurnController(scene, cube)
+
+    const scrambleBtn = document.getElementById('scramble-btn');
+    if (scrambleBtn) {
+        scrambleBtn.addEventListener('click', () => {
+            turnController.scramble();
+        });
+    }
 
     window.addEventListener('resize', onWindowResize, false);
 }
