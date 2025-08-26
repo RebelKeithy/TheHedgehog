@@ -1,5 +1,5 @@
 import type {CubieSelector, ITurn} from "./iturn.ts";
-import {Group, Quaternion, Vector3} from "three";
+import {Group, Vector3} from "three";
 import {Game} from "../game.ts";
 
 export class Turn implements ITurn {
@@ -55,16 +55,7 @@ export class Turn implements ITurn {
       cube.root.attach(c.pivot)
     })
     this.root.clear()
-    cube.cubies.forEach((c) => {
-      c.stickers.forEach((s) => {
-        s.unification()
-      })
-    })
-    cube.cubies.forEach((c) => {
-      c.stickers.forEach((s) => {
-        s.cubie.pivot.setRotationFromQuaternion(new Quaternion())
-      })
-    })
+    cube.unification()
     this.targets = []
   }
 

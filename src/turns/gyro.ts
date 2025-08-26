@@ -98,6 +98,7 @@ class StickerInterpolator {
 
   public stop() {
     this.sticker.update(this.finalPosition, this.finalOffset!)
+    Game.game().cube.unification()
   }
 }
 

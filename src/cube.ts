@@ -1,5 +1,5 @@
 import {VectorMath, Vectors} from "./vector_math.ts";
-import {Group, Object3D, type Scene, Vector3, Vector4} from "three";
+import {Group, Object3D, Quaternion, type Scene, Vector3, Vector4} from "three";
 import * as THREE from "three";
 import {Config} from "./config.ts";
 // @ts-ignore
@@ -70,6 +70,19 @@ export class Cube {
             }
         })
         scene.add(this.root)
+    }
+
+    unification() {
+        this.cubies.forEach((c) => {
+            c.stickers.forEach((s) => {
+                s.unification()
+            })
+        })
+        this.cubies.forEach((c) => {
+            c.stickers.forEach((s) => {
+                s.cubie.pivot.setRotationFromQuaternion(new Quaternion())
+            })
+        })
     }
 }
 

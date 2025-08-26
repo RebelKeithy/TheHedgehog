@@ -60,16 +60,7 @@ export class WRotation implements ITurn {
     Game.game().scene.remove(this.annaCubies)
     Game.game().scene.remove(this.kataCubies)
 
-    // cube.cubies.forEach((c) => {
-    //   c.stickers.forEach((s) => {
-    //     s.unification()
-    //   })
-    // })
-    // cube.cubies.forEach((c) => {
-    //   c.stickers.forEach((s) => {
-    //     s.cubie.pivot.setRotationFromQuaternion(new Quaternion())
-    //   })
-    // })
+    cube.unification()
 
     this.angle = 0
     this.direction = 1

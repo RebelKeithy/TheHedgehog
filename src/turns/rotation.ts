@@ -47,6 +47,7 @@ export class Rotation implements ITurn {
     this.root.clear()
     this.root.setRotationFromQuaternion(new Quaternion())
     Game.game().scene.remove(this.root)
+    cube.unification()
 
     this.angle = 0
     this.direction = 1
