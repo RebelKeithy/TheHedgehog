@@ -12,7 +12,7 @@ class StickerInterpolator {
   finalOffset?: Vector3
   finalPosition: Vector3
 
-  constructor(sticker: Sticker) {
+  constructor(sticker: Sticker, direction: number = 1) {
     const config = Config.config()
     this.sticker = sticker
     this.startingRotation = new Quaternion().setFromEuler(sticker.cube.rotation)
@@ -21,12 +21,7 @@ class StickerInterpolator {
     const outer = sticker.cubie.inLayer(CubeFace.L)
     const up = sticker.cubie.inLayer(CubeFace.U)
     const front = sticker.cubie.inLayer(CubeFace.F)
-    this.finalPosition = sticker.position.clone()
-
-    if (this.finalPosition.x == 1)
-      this.finalPosition.setX(-1)
-    else if (this.finalPosition.x == -1)
-      this.finalPosition.setX(1)
+    this.finalPosition = sticker.position.clone().setX(-sticker.position.x)
 
 
     if (anna && outer || !anna && !outer) {
@@ -111,7 +106,7 @@ class GyroComponent {
 
   stickerInterpolators: StickerInterpolator[] = []
 
-  constructor(cubie: Cubie) {
+  constructor(cubie: Cubie, direction: number = 1) {
     const config = Config.config()
     const x0 = -config.w_center_x - config.cubie_gap/2 - config.cube_size
     const x1 = -config.w_center_x + config.cubie_gap/2 + config.cube_size
@@ -120,21 +115,39 @@ class GyroComponent {
 
     this.cubie = cubie
     this.startingPosition = cubie.pivot.position.clone()
-    if (cubie.inLayer(CubeFace.A)) {
-      if (cubie.inLayer(CubeFace.L)) {
-        // Moves from L to R side.
-        this.endPosition = this.startingPosition.clone().setX(x3)
+
+    if (direction > 0) {
+      // Forward direction (original behavior)
+      if (cubie.inLayer(CubeFace.A)) {
+        if (cubie.inLayer(CubeFace.L)) {
+          this.endPosition = this.startingPosition.clone().setX(x3)
+        } else {
+          this.endPosition = this.startingPosition.clone().setX(x0)
+        }
       } else {
-        this.endPosition = this.startingPosition.clone().setX(x0)
+        if (cubie.inLayer(CubeFace.R)) {
+          this.endPosition = this.startingPosition.clone().setX(x1)
+        } else {
+          this.endPosition = this.startingPosition.clone().setX(x2)
+        }
       }
     } else {
-      if (cubie.inLayer(CubeFace.R)) {
-        this.endPosition = this.startingPosition.clone().setX(x1)
+      // Reverse direction
+      if (cubie.inLayer(CubeFace.A)) {
+        if (cubie.inLayer(CubeFace.L)) {
+          this.endPosition = this.startingPosition.clone().setX(x1)
+        } else {
+          this.endPosition = this.startingPosition.clone().setX(x2)
+        }
       } else {
-        this.endPosition = this.startingPosition.clone().setX(x2)
+        if (cubie.inLayer(CubeFace.R)) {
+          this.endPosition = this.startingPosition.clone().setX(x3)
+        } else {
+          this.endPosition = this.startingPosition.clone().setX(x0)
+        }
       }
     }
-    cubie.stickers.forEach((s) => this.stickerInterpolators.push(new StickerInterpolator(s)))
+    cubie.stickers.forEach((s) => this.stickerInterpolators.push(new StickerInterpolator(s, direction)))
   }
 
   public update(t: number) {
@@ -153,9 +166,11 @@ export class Gyro implements ITurn {
   ticks: number = 0
   maxTicks: number = 2
   direction: number = 1
+  axis?: Vector3
 
   constructor() {
     this.components = []
+    this.axis = undefined
   }
 
   public tick(dt: number) {
@@ -174,7 +189,7 @@ export class Gyro implements ITurn {
 
   public begin() {
     Game.game().cube.cubies.forEach((c) => {
-      this.components.push(new GyroComponent(c))
+      this.components.push(new GyroComponent(c, this.direction))
     })
   }
 
