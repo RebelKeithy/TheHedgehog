@@ -164,6 +164,23 @@ function animate() {
 }
 
 let preparing_turn = false
+let shiftPressed = false
+let ctrlPressed = false
+
+function updateModeIndicator() {
+    const indicator = document.getElementById('mode-indicator');
+    if (!indicator) return;
+    
+    if (shiftPressed && ctrlPressed) {
+        indicator.textContent = '4D Rotations';
+    } else if (shiftPressed) {
+        indicator.textContent = '4D Turns';
+    } else if (ctrlPressed) {
+        indicator.textContent = '3D Rotations';
+    } else {
+        indicator.textContent = '3D Turns';
+    }
+}
 
 document.addEventListener('mousedown', (event) => {
     const raycaster = new THREE.Raycaster();
@@ -194,11 +211,15 @@ document.addEventListener('keydown', (event) => {
         if (turnController) {
             turnController.setShift(true)
         }
+        shiftPressed = true;
+        updateModeIndicator();
     }
     if (event.key == 'Control') {
         if(turnController) {
             turnController.ctrl = true
         }
+        ctrlPressed = true;
+        updateModeIndicator();
     }
 })
 
@@ -207,11 +228,15 @@ document.addEventListener('keyup', (event) => {
         if (turnController) {
             turnController.setShift(false)
         }
+        shiftPressed = false;
+        updateModeIndicator();
     }
     if (event.key == 'Control') {
         if(turnController) {
             turnController.ctrl = false
         }
+        ctrlPressed = false;
+        updateModeIndicator();
     }
 })
 

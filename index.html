@@ -9,10 +9,15 @@
     #ui { position:fixed; inset:12px auto auto 12px; color:#cdd6f4; font:14px/1.4 system-ui; }
     kbd { background:#111827; border:1px solid #1f2937; padding:2px 6px; border-radius:6px; }
     .title { position: absolute; color: silver; background-color: transparent; font-size: 48pt; left: 3%; top: 3% }
+    .key-indicators { position: fixed; top: 12px; right: 12px; color: #cdd6f4; font: 16px/1.4 system-ui; }
+    .key-indicator { background: rgba(17, 24, 39, 0.8); border: 1px solid #1f2937; padding: 8px 12px; border-radius: 6px; opacity: 1; }
   </style>
 </head>
 <body>
 <div class="title">The Hedgehog</div>
+<div class="key-indicators">
+  <div id="mode-indicator" class="key-indicator">3D Turns</div>
+</div>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
