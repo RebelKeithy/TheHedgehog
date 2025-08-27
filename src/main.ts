@@ -6,6 +6,13 @@ import {Game} from "./game.ts";
 import {Config} from "./config.ts";
 import {PerspectiveCamera, Scene, WebGLRenderer} from "three";
 
+// Type declaration for Lucide global object
+declare global {
+    const lucide: {
+        createIcons(): void;
+    };
+}
+
 
 let config: Config, scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer, controls: OrbitControls, cube: Cube;
 let turnController: TurnController;

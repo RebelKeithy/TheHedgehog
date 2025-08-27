@@ -8,12 +8,12 @@ export class Config {
     cubie_gap: number = 0.2
     hedgehog_angle: number = 35
 
-    cubie_pos: number
-    _h_angle_rad: number
-    angled_cubie_height: number
-    w_center_x: number
+    cubie_pos: number = 0
+    _h_angle_rad: number = 0
+    angled_cubie_height: number = 0
+    w_center_x: number = 0
     
-    colors: {[key: string]: number}
+    colors: {[key: string]: number} = {}
 
     constructor() {
         this.loadFromLocalStorage()

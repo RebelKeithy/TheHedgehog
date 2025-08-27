@@ -147,7 +147,7 @@ class GyroComponent {
         }
       }
     }
-    cubie.stickers.forEach((s) => this.stickerInterpolators.push(new StickerInterpolator(s, direction)))
+    cubie.stickers.forEach((s) => this.stickerInterpolators.push(new StickerInterpolator(s)))
   }
 
   public update(t: number) {
