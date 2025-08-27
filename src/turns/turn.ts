@@ -5,6 +5,7 @@ import {Game} from "../game.ts";
 export class Turn implements ITurn {
   filter: CubieSelector
   angle: number
+  stepSize: number
   stepRadians: number
   axis: Vector3
   public root: Group
@@ -15,6 +16,7 @@ export class Turn implements ITurn {
   public constructor(axis: Vector3, origin: Vector3, stepSize: number, filter: CubieSelector) {
     this.filter = filter
     this.angle = 0
+    this.stepSize = stepSize
     this.stepRadians = Math.PI/2 * stepSize
     this.axis = axis
     this.root = new Group()
@@ -42,7 +44,7 @@ export class Turn implements ITurn {
   }
 
   tick(da: number) {
-    this.angle += da * this.direction;
+    this.angle += da * this.direction * this.stepSize;
     this.root.setRotationFromAxisAngle(this.axis, this.angle)
   }
 

@@ -68,7 +68,7 @@ export class TurnController {
     public scramble() {
         this.scrambling = true
         this._scramble_remaining = 100
-        this.speed = 3
+        this.speed = 5
     }
 
     public gyro() {

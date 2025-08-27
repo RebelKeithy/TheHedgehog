@@ -149,6 +149,13 @@ function init() {
         });
     }
 
+    const resetBtn = document.getElementById('reset-btn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            cube.reset();
+        })
+    }
+
     setupSettingsPanel();
 
     window.addEventListener('resize', onWindowResize, false);
