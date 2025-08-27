@@ -4,7 +4,6 @@ import * as THREE from "three";
 import {Config} from "./config.ts";
 // @ts-ignore
 import {RoundedBoxGeometry} from "three/examples/jsm/geometries/RoundedBoxGeometry";
-import {Game} from "./game.ts";
 
 export class CubeFace {
     static U = "U"
@@ -74,20 +73,18 @@ export class Cube {
     }
 
     reset() {
-        Game.game().scene.remove(this.root)
-        this.cubies = []
-
-        Object.values(CubePosition).forEach((position) => {
-            const cubie = new Cubie(position)
-            this.root.add(cubie.pivot)
-            this.cubies.push(cubie)
-            if (position.w == 1) {
-                cubie.pivot.position.x -= Config.config().w_center_x
-            } else {
-                cubie.pivot.position.x += Config.config().w_center_x
-            }
+        this.cubies.forEach((cubie) => {
+            cubie.stickers.forEach((s) => {
+                if (s.getFace() == CubeFace.A) {
+                    s.colorId = getColorId({w: 1})
+                } else if (s.getFace() == CubeFace.K) {
+                    s.colorId = getColorId({w: -1})
+                } else {
+                    s.colorId = getColorId({x: s.offset.x, y: s.offset.y, z: s.offset.z})
+                }
+                s.updateColor()
+            })
         })
-        Game.game().scene.add(this.root)
     }
 
     unification() {

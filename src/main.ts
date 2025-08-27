@@ -5,13 +5,9 @@ import {Cube} from "./cube.ts";
 import {Game} from "./game.ts";
 import {Config} from "./config.ts";
 import {PerspectiveCamera, Scene, WebGLRenderer} from "three";
+import '@shoelace-style/shoelace/dist/themes/dark.css';
+import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.js';
 
-// Type declaration for Lucide global object
-declare global {
-    const lucide: {
-        createIcons(): void;
-    };
-}
 
 
 let config: Config, scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer, controls: OrbitControls, cube: Cube;
@@ -110,6 +106,12 @@ function createVignetteBackground() {
 
 
 function init() {
+    // Set up Shoelace base path
+    setBasePath('/node_modules/@shoelace-style/shoelace/dist');
+    
+    // Apply dark theme to document
+    document.documentElement.classList.add('sl-theme-dark');
+    
     config = Config.config()
     // Scene
     scene = new THREE.Scene();
@@ -135,6 +137,7 @@ function init() {
     controls.minDistance = 5;
     controls.maxDistance = 60;
     controls.mouseButtons = {
+        LEFT: THREE.MOUSE.ROTATE,
         RIGHT: THREE.MOUSE.ROTATE
     }
 
@@ -149,19 +152,8 @@ function init() {
     new Game(config, scene, cube)
     turnController = new TurnController(scene, cube)
 
-    const scrambleBtn = document.getElementById('scramble-btn');
-    if (scrambleBtn) {
-        scrambleBtn.addEventListener('click', () => {
-            turnController.scramble();
-        });
-    }
-
-    const resetBtn = document.getElementById('reset-btn');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-            cube.reset();
-        })
-    }
+    document.getElementById('scramble-btn')?.addEventListener('click', () => turnController.scramble());
+    document.getElementById('reset-btn')?.addEventListener('click', () => cube.reset());
 
     setupSettingsPanel();
     setupInfoPanel();
@@ -192,156 +184,108 @@ let shiftPressed = false
 let ctrlPressed = false
 
 function updateModeIndicator() {
-    const indicator = document.getElementById('mode-indicator');
+    const indicator = document.getElementById('mode-indicator') as any;
     if (!indicator) return;
     
     if (shiftPressed && ctrlPressed) {
         indicator.textContent = 'Mode: 4D Rotations';
+        indicator.variant = 'warning';
     } else if (shiftPressed) {
         indicator.textContent = 'Mode: 4D Turns';
+        indicator.variant = 'warning';
     } else if (ctrlPressed) {
         indicator.textContent = 'Mode: 3D Rotations';
+        indicator.variant = 'warning';
     } else {
         indicator.textContent = 'Mode: 3D Turns';
+        indicator.variant = 'neutral';
     }
 }
 
 function setupSettingsPanel() {
-    const settingsToggle = document.getElementById('settings-toggle');
-    const settingsPanel = document.getElementById('settings-panel');
-    const settingsOverlay = document.getElementById('settings-overlay');
-    const settingsClose = document.getElementById('settings-close');
-    const turnSpeedSlider = document.getElementById('turn-speed-slider') as HTMLInputElement;
+    const settingsToggle = document.getElementById('settings-toggle')!;
+    const settingsPanel = document.getElementById('settings-panel') as any;
+    const turnSpeedSlider = document.getElementById('turn-speed-slider') as any;
     const turnSpeedValue = document.getElementById('turn-speed-value');
-    const cubieGapSlider = document.getElementById('cubie-gap-slider') as HTMLInputElement;
+    const cubieGapSlider = document.getElementById('cubie-gap-slider') as any;
     const cubieGapValue = document.getElementById('cubie-gap-value');
-    const hedgehogAngleSlider = document.getElementById('hedgehog-angle-slider') as HTMLInputElement;
+    const hedgehogAngleSlider = document.getElementById('hedgehog-angle-slider') as any;
     const hedgehogAngleValue = document.getElementById('hedgehog-angle-value');
 
-    if (!settingsToggle || !settingsPanel) return;
-
-    // Toggle settings panel
+    // Show/hide drawer
     settingsToggle.addEventListener('click', () => {
-        settingsPanel.classList.toggle('open');
-        if (settingsOverlay) {
-            settingsOverlay.classList.toggle('open');
-        }
+        settingsPanel.show();
     });
 
-    // Close settings panel
-    if (settingsClose) {
-        settingsClose.addEventListener('click', () => {
-            settingsPanel.classList.remove('open');
-            if (settingsOverlay) {
-                settingsOverlay.classList.remove('open');
-            }
-        });
-    }
-
-    // Close settings panel when clicking on overlay
-    if (settingsOverlay) {
-        settingsOverlay.addEventListener('click', () => {
-            settingsPanel.classList.remove('open');
-            settingsOverlay.classList.remove('open');
-        });
-    }
-
-    // Close settings panel when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!settingsPanel.contains(e.target as Node) && 
-            !settingsToggle.contains(e.target as Node) && 
-            settingsPanel.classList.contains('open')) {
-            settingsPanel.classList.remove('open');
-            if (settingsOverlay) {
-                settingsOverlay.classList.remove('open');
-            }
-        }
-    });
-
-    // Turn Speed control
-    if (turnSpeedSlider && turnSpeedValue) {
-        turnSpeedSlider.value = config.turn_speed.toString();
-        turnSpeedValue.textContent = config.turn_speed.toFixed(1);
-        
-        turnSpeedSlider.addEventListener('input', (e) => {
-            const config = Config.config();
-            const value = parseFloat((e.target as HTMLInputElement).value);
-            config.turn_speed = value;
-            turnSpeedValue.textContent = value.toFixed(1);
-            config.saveToLocalStorage()
-        });
-    }
-
-    // Cubie Gap control
-    if (cubieGapSlider && cubieGapValue) {
-        cubieGapSlider.value = (config.cubie_gap/2).toString();
-        cubieGapValue.textContent = (config.cubie_gap/2).toFixed(2);
-        
-        cubieGapSlider.addEventListener('input', (e) => {
-            const value = parseFloat((e.target as HTMLInputElement).value);
-            config.cubie_gap = value * 2;
-            cubieGapValue.textContent = value.toFixed(2);
-            
-            // Recalculate dependent values
-            config.cubie_pos = config.cube_size + config.cubie_gap/2;
-            config.w_center_x = config.cube_size + config.cubie_gap + config.angled_cubie_height;
-            
-            // Recreate the cube with new gap
-            cube.unification()
-            
-            // Save to local storage
-            config.saveToLocalStorage();
-        });
-    }
-
-    // Hedgehog Angle control
-    if (hedgehogAngleSlider && hedgehogAngleValue) {
-        const c = Game.game().config
-        hedgehogAngleSlider.value = c.hedgehog_angle.toString();
-        hedgehogAngleValue.textContent = `${c.hedgehog_angle}°`;
-        
-        hedgehogAngleSlider.addEventListener('input', (e) => {
-            const value = parseFloat((e.target as HTMLInputElement).value);
-            c.hedgehog_angle = value;
-            hedgehogAngleValue.textContent = `${value}°`;
-            
-            // Recalculate dependent values
-            c._h_angle_rad = Math.PI/180 * c.hedgehog_angle;
-            c.angled_cubie_height = c.cube_size * (Math.cos(c._h_angle_rad) + Math.sqrt(2) * Math.sin(c._h_angle_rad));
-            c.w_center_x = c.cube_size + c.cubie_gap + c.angled_cubie_height;
-            
-            // Recreate the cube with new angle
-            cube.unification()
-            
-            // Save to local storage
-            c.saveToLocalStorage();
-        });
-    }
+    // Turn Speed control - Shoelace sl-range
+    turnSpeedSlider.value = config.turn_speed;
+    if (turnSpeedValue) turnSpeedValue.textContent = config.turn_speed.toFixed(1);
     
-    // Color picker controls
+    turnSpeedSlider.addEventListener('sl-change', (e: any) => {
+        const value = parseFloat(e.target.value);
+        config.turn_speed = value;
+        if (turnSpeedValue) turnSpeedValue.textContent = value.toFixed(1);
+        config.saveToLocalStorage();
+    });
+
+    // Cubie Gap control - Shoelace sl-range
+    cubieGapSlider.value = config.cubie_gap / 2;
+    if (cubieGapValue) cubieGapValue.textContent = (config.cubie_gap / 2).toFixed(2);
+    
+    cubieGapSlider.addEventListener('sl-change', (e: any) => {
+        const value = parseFloat(e.target.value);
+        config.cubie_gap = value * 2;
+        if (cubieGapValue) cubieGapValue.textContent = value.toFixed(2);
+        
+        // Recalculate dependent values
+        config.cubie_pos = config.cube_size + config.cubie_gap/2;
+        config.w_center_x = config.cube_size + config.cubie_gap + config.angled_cubie_height;
+        
+        cube.unification();
+        config.saveToLocalStorage();
+    });
+
+    // Hedgehog Angle control - Shoelace sl-range
+    const c = Game.game().config;
+    hedgehogAngleSlider.value = c.hedgehog_angle;
+    if (hedgehogAngleValue) hedgehogAngleValue.textContent = `${c.hedgehog_angle}°`;
+    
+    hedgehogAngleSlider.addEventListener('sl-change', (e: any) => {
+        const value = parseFloat(e.target.value);
+        c.hedgehog_angle = value;
+        if (hedgehogAngleValue) hedgehogAngleValue.textContent = `${value}°`;
+        
+        // Recalculate dependent values
+        c._h_angle_rad = Math.PI/180 * c.hedgehog_angle;
+        c.angled_cubie_height = c.cube_size * (Math.cos(c._h_angle_rad) + Math.sqrt(2) * Math.sin(c._h_angle_rad));
+        c.w_center_x = c.cube_size + c.cubie_gap + c.angled_cubie_height;
+        
+        cube.unification();
+        c.saveToLocalStorage();
+    });
+    
+    // Color picker controls - Shoelace sl-color-picker
     const colorInputs = {
-        'plus-w': document.getElementById('color-plus-w') as HTMLInputElement,
-        'minus-w': document.getElementById('color-minus-w') as HTMLInputElement,
-        'plus-x': document.getElementById('color-plus-x') as HTMLInputElement,
-        'minus-x': document.getElementById('color-minus-x') as HTMLInputElement,
-        'plus-y': document.getElementById('color-plus-y') as HTMLInputElement,
-        'minus-y': document.getElementById('color-minus-y') as HTMLInputElement,
-        'plus-z': document.getElementById('color-plus-z') as HTMLInputElement,
-        'minus-z': document.getElementById('color-minus-z') as HTMLInputElement,
+        'plus-w': document.getElementById('color-plus-w'),
+        'minus-w': document.getElementById('color-minus-w'),
+        'plus-x': document.getElementById('color-plus-x'),
+        'minus-x': document.getElementById('color-minus-x'),
+        'plus-y': document.getElementById('color-plus-y'),
+        'minus-y': document.getElementById('color-minus-y'),
+        'plus-z': document.getElementById('color-plus-z'),
+        'minus-z': document.getElementById('color-minus-z'),
     };
     
     Object.entries(colorInputs).forEach(([key, input]) => {
         if (input) {
-            input.addEventListener('input', (e) => {
-                const hexColor = (e.target as HTMLInputElement).value;
+            input.addEventListener('sl-change', (e: any) => {
+                const hexColor = e.target.value;
                 const numericColor = parseInt(hexColor.slice(1), 16);
                 
                 const colorKey = key.replace('-', '_') as keyof typeof config.colors;
                 config.colors[colorKey] = numericColor;
                 
                 cube.updateColors();
-                
-                // Save to local storage
                 config.saveToLocalStorage();
             });
         }
@@ -349,49 +293,11 @@ function setupSettingsPanel() {
 }
 
 function setupInfoPanel() {
-    const infoToggle = document.getElementById('info-toggle');
-    const infoPanel = document.getElementById('info-panel');
-    const infoOverlay = document.getElementById('info-overlay');
-    const infoClose = document.getElementById('info-close');
+    const infoToggle = document.getElementById('info-toggle')!;
+    const infoPanel = document.getElementById('info-panel') as any;
 
-    if (!infoToggle || !infoPanel) return;
-
-    // Toggle info panel
     infoToggle.addEventListener('click', () => {
-        infoPanel.classList.toggle('open');
-        if (infoOverlay) {
-            infoOverlay.classList.toggle('open');
-        }
-    });
-
-    // Close info panel
-    if (infoClose) {
-        infoClose.addEventListener('click', () => {
-            infoPanel.classList.remove('open');
-            if (infoOverlay) {
-                infoOverlay.classList.remove('open');
-            }
-        });
-    }
-
-    // Close info panel when clicking on overlay
-    if (infoOverlay) {
-        infoOverlay.addEventListener('click', () => {
-            infoPanel.classList.remove('open');
-            infoOverlay.classList.remove('open');
-        });
-    }
-
-    // Close info panel when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!infoPanel.contains(e.target as Node) && 
-            !infoToggle.contains(e.target as Node) && 
-            infoPanel.classList.contains('open')) {
-            infoPanel.classList.remove('open');
-            if (infoOverlay) {
-                infoOverlay.classList.remove('open');
-            }
-        }
+        infoPanel.show();
     });
 }
 
@@ -419,91 +325,74 @@ document.addEventListener('mousedown', (event) => {
 })
 
 document.addEventListener('keydown', (event) => {
-    console.log(event.key)
-    if (event.key == 'Shift') {
-        if (turnController) {
-            turnController.setShift(true)
-        }
+    if (event.key === 'Shift') {
+        turnController?.setShift(true);
         shiftPressed = true;
         updateModeIndicator();
     }
-    if (event.key == 'Control') {
-        if(turnController) {
-            turnController.ctrl = true
-        }
+    if (event.key === 'Control') {
+        if (turnController) turnController.ctrl = true;
         ctrlPressed = true;
         updateModeIndicator();
     }
-})
+
+    switch (event.key) {
+        case 'w':
+            turnController.startTurn(TurnRegistry.AR());
+            break;
+        case 's':
+            turnController.startTurn(TurnRegistry.AL());
+            break;
+        case 'q':
+            turnController.startTurn(TurnRegistry.AF());
+            break;
+        case 'e':
+            turnController.startTurn(TurnRegistry.AB());
+            break;
+        case 'a':
+            turnController.startTurn(TurnRegistry.AU());
+            break;
+        case 'd':
+            turnController.startTurn(TurnRegistry.AD());
+            break;
+        case 'p':
+            Config.config().debug_pause = !Config.config().debug_pause;
+            break;
+        case 'o':
+            turnController.gyro();
+            break;
+        case 'i':
+            cube.unification();
+            break;
+    }
+});
 
 document.addEventListener('keyup', (event) => {
-    if (event.key == 'Shift') {
-        if (turnController) {
-            turnController.setShift(false)
-        }
+    if (event.key === 'Shift') {
+        turnController?.setShift(false);
         shiftPressed = false;
         updateModeIndicator();
     }
-    if (event.key == 'Control') {
-        if(turnController) {
-            turnController.ctrl = false
-        }
+    if (event.key === 'Control') {
+        if (turnController) turnController.ctrl = false;
         ctrlPressed = false;
         updateModeIndicator();
     }
-})
+});
 
-document.addEventListener('mouseup', (_) => {
-    preparing_turn = false
-    turnController.mouseUp()
-})
+document.addEventListener('mouseup', () => {
+    preparing_turn = false;
+    turnController.mouseUp();
+});
 
 document.addEventListener('mousemove', (event) => {
     if (preparing_turn) {
         const x = event.clientX / window.innerWidth * 2 - 1;
-        const y = (window.innerHeight - event.clientY) / window.innerHeight * 2 - 1
+        const y = (window.innerHeight - event.clientY) / window.innerHeight * 2 - 1;
         const pointer = new THREE.Vector2(x, y);
-        turnController.mouseMove(pointer)
-    }
-})
-
-document.addEventListener('keydown', (event) => {
-    switch (event.key) {
-        case 'w':
-            turnController.startTurn(TurnRegistry.AU())
-            break
-        case 's':
-            turnController.startTurn(TurnRegistry.AU())
-            break
-        case 'q':
-            turnController.startTurn(TurnRegistry.AF())
-            break
-        case 'e':
-            turnController.startTurn(TurnRegistry.AF())
-            break
-        case 'a':
-            turnController.startTurn(TurnRegistry.I())
-            break
-        case 'd':
-            turnController.startTurn(TurnRegistry.O())
-            break
-        case 'p':
-            Config.config().debug_pause = !Config.config().debug_pause
-            break
-        case 'o':
-            turnController.gyro()
-            break
-        case 'i':
-            cube.unification()
-            break
+        turnController.mouseMove(pointer);
     }
 });
 
 init();
-
-// Initialize Lucide icons
-if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-}
-
 animate();

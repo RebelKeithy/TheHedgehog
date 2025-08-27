@@ -4,427 +4,161 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Rubik's Cube • Three.js</title>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script type="module" src="node_modules/@shoelace-style/shoelace/dist/shoelace.js"></script>
   <style>
-    html, body, #app { margin:0; height:100%; background:#0b0f14; }
-    #ui { position:fixed; inset:12px auto auto 12px; color:#cdd6f4; font:14px/1.4 system-ui; }
-    kbd { background:#111827; border:1px solid #1f2937; padding:2px 6px; border-radius:6px; }
-    .title { position: absolute; color: silver; background-color: transparent; font-size: 48pt; left: 3%; top: 3% }
-    .top-buttons { position: fixed; top: 12px; right: 12px; display: flex; align-items: center; }
-    .mode-indicator-container { position: fixed; top: 60px; right: 12px; }
-    .key-indicator { background: rgba(17, 24, 39, 0.8); border: 1px solid #1f2937; padding: 8px 12px; border-radius: 6px; opacity: 1; color: #cdd6f4; font: 16px/1.4 system-ui; }
-    button.key-indicator { cursor: pointer; transition: background-color 0.2s; }
-    button.key-indicator:hover { background: rgba(31, 41, 55, 0.9); }
+    /* Essential layout styles only */
+    html, body { margin: 0; height: 100%; }
     
-    /* Settings Panel Styles */
-    #settings-panel {
-      position: fixed;
-      top: 0;
-      right: -320px;
-      width: 320px;
-      height: 100vh;
-      background: rgba(17, 24, 39, 0.95);
-      backdrop-filter: blur(10px);
-      border-left: 1px solid #1f2937;
-      transition: right 0.3s ease-in-out;
-      z-index: 1000;
-      padding: 20px;
-      box-sizing: border-box;
-      overflow-y: auto;
-    }
-    
-    #settings-panel.open {
-      right: 0;
-    }
-    
-    
-    .settings-header {
-      color: #cdd6f4;
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #1f2937;
-      padding-bottom: 10px;
-    }
-    
-    .setting-group {
-      margin-bottom: 20px;
-    }
-    
-    .setting-label {
-      color: #cdd6f4;
-      font-size: 14px;
-      margin-bottom: 8px;
-      display: block;
-    }
-    
-    .setting-input {
-      width: 100%;
-      background: rgba(31, 41, 55, 0.8);
-      border: 1px solid #374151;
-      color: #cdd6f4;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font: 14px system-ui;
-      box-sizing: border-box;
-    }
-    
-    .setting-input:focus {
-      outline: none;
-      border-color: #60a5fa;
-    }
-    
-    .setting-range {
-      width: 100%;
-      margin: 10px 0;
-      appearance: none;
-      height: 4px;
-      border-radius: 2px;
-      background: #374151;
-      cursor: pointer;
-    }
-    
-    .setting-range::-webkit-slider-thumb {
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #60a5fa;
-      cursor: pointer;
-    }
-    
-    .setting-range::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #60a5fa;
-      cursor: pointer;
-      border: none;
-    }
-    
-    .setting-value {
-      color: #9ca3af;
-      font-size: 12px;
-      text-align: right;
-    }
-    
-    .color-input {
-      width: 60px;
-      height: 40px;
-      border: 1px solid #374151;
-      border-radius: 4px;
-      background: transparent;
-      cursor: pointer;
-      padding: 0;
-    }
-    
-    .color-input::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-    
-    .color-input::-webkit-color-swatch {
-      border: none;
-      border-radius: 3px;
-    }
-    
-    .colors-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 10px;
-    }
-    
-    .color-setting {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    .color-label {
-      color: #9ca3af;
-      font-size: 11px;
-      text-align: center;
-    }
-    
-    .settings-close {
+    .title { 
       position: absolute;
-      top: 20px;
-      right: 20px;
-      background: none;
-      border: none;
-      color: #9ca3af;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px;
-      border-radius: 4px;
-      transition: color 0.2s;
+      color: var(--sl-color-neutral-700);
+      font-size: 48pt; 
+      left: 3%; 
+      top: 3%;
+      z-index: 1;
     }
     
-    .settings-close:hover {
-      color: #cdd6f4;
+    .top-buttons { 
+      position: fixed; 
+      top: 12px; 
+      right: 12px; 
+      display: flex; 
+      gap: 8px;
+      z-index: 100;
     }
     
-    .settings-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.35);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-      z-index: 999;
-    }
-    
-    .settings-overlay.open {
-      opacity: 1;
-      visibility: visible;
-    }
-    
-    /* Info Panel Styles */
-    #info-panel {
-      position: fixed;
-      top: 0;
-      left: -400px;
-      width: 400px;
-      height: 100vh;
-      background: rgba(17, 24, 39, 0.95);
-      backdrop-filter: blur(10px);
-      border-right: 1px solid #1f2937;
-      transition: left 0.3s ease-in-out;
-      z-index: 1000;
-      padding: 20px;
-      box-sizing: border-box;
-      overflow-y: auto;
-    }
-    
-    #info-panel.open {
-      left: 0;
-    }
-    
-    .info-header {
-      color: #cdd6f4;
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #1f2937;
-      padding-bottom: 10px;
-    }
-    
-    .info-section {
-      margin-bottom: 24px;
-    }
-    
-    .info-section-title {
-      color: #60a5fa;
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 12px;
-    }
-    
-    .control-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      padding: 4px 0;
-    }
-    
-    .control-key {
-      background: rgba(31, 41, 55, 0.8);
-      border: 1px solid #374151;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-family: monospace;
-      color: #cdd6f4;
-      font-size: 12px;
-      min-width: 60px;
-      text-align: center;
-    }
-    
-    .control-description {
-      color: #9ca3af;
-      font-size: 14px;
-      flex: 1;
-      margin-left: 12px;
-    }
-    
-    .info-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: none;
-      border: none;
-      color: #9ca3af;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px;
-      border-radius: 4px;
-      transition: color 0.2s;
-    }
-    
-    .info-close:hover {
-      color: #cdd6f4;
-    }
-    
-    .info-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.35);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-      z-index: 999;
-    }
-    
-    .info-overlay.open {
-      opacity: 1;
-      visibility: visible;
+    .mode-indicator-container { 
+      position: fixed; 
+      top: 60px; 
+      right: 12px;
+      z-index: 100;
     }
   </style>
 </head>
 <body>
 <div class="title">The Hedgehog</div>
 <div class="top-buttons">
-  <button id="scramble-btn" class="key-indicator" style="margin-right: 8px;">
-    <i data-lucide="shuffle" style="width: 16px; height: 16px; vertical-align: middle;"></i>
-  </button>
-  <button id="reset-btn" class="key-indicator" style="margin-right: 8px;">
-    <i data-lucide="rotate-ccw" style="width: 16px; height: 16px; vertical-align: middle;"></i>
-  </button>
-  <button id="settings-toggle" class="key-indicator">
-    <i data-lucide="settings" style="width: 16px; height: 16px; vertical-align: middle;"></i>
-  </button>
-  <button id="info-toggle" class="key-indicator" style="margin-left: 8px;">
-    <i data-lucide="help-circle" style="width: 16px; height: 16px; vertical-align: middle;"></i>
-  </button>
+  <sl-icon-button id="scramble-btn" name="shuffle" label="Scramble" style="font-size: 1.5rem;"></sl-icon-button>
+  <sl-icon-button id="reset-btn" name="arrow-counterclockwise" label="Reset" style="font-size: 1.5rem;"></sl-icon-button>
+  <sl-icon-button id="settings-toggle" name="gear" label="Settings" style="font-size: 1.5rem;"></sl-icon-button>
+  <sl-icon-button id="info-toggle" name="question-circle" label="Info" style="font-size: 1.5rem;"></sl-icon-button>
 </div>
 
 <div class="mode-indicator-container">
-  <div id="mode-indicator" class="key-indicator">Mode: 3D Turns</div>
+  <sl-badge id="mode-indicator" variant="neutral" pill style="font-size: 1.5rem;">Mode: 3D Turns</sl-badge>
 </div>
 
-<div class="settings-overlay" id="settings-overlay"></div>
-<div class="info-overlay" id="info-overlay"></div>
-
-<div id="settings-panel">
-  <button class="settings-close" id="settings-close">✕</button>
-  <div class="settings-header">Settings</div>
-  
-  <div class="setting-group">
-    <label class="setting-label">Turn Speed</label>
-    <input type="range" id="turn-speed-slider" class="setting-range" min="0.1" max="5" step="0.1" value="1">
-    <div class="setting-value" id="turn-speed-value">1.0</div>
-  </div>
-  
-  <div class="setting-group">
-    <label class="setting-label">Cubie Gap</label>
-    <input type="range" id="cubie-gap-slider" class="setting-range" min="0" max="1" step="0.05" value="0.1">
-    <div class="setting-value" id="cubie-gap-value">0.10</div>
-  </div>
-  
-  <div class="setting-group">
-    <label class="setting-label">Hedgehog Angle</label>
-    <input type="range" id="hedgehog-angle-slider" class="setting-range" min="0" max="55" step="1" value="35">
-    <div class="setting-value" id="hedgehog-angle-value">35°</div>
-  </div>
-  
-  <div class="setting-group">
-    <label class="setting-label">Cube Colors</label>
-    <div class="colors-grid">
-      <div class="color-setting">
-        <div class="color-label">+W (Purple)</div>
-        <input type="color" id="color-plus-w" class="color-input" value="#800080">
+<sl-drawer id="settings-panel" label="Settings" placement="end">
+  <div style="padding: 1rem;">
+    <sl-divider></sl-divider>
+    
+    <div style="margin-bottom: 1.5rem;">
+      <sl-range id="turn-speed-slider" label="Turn Speed" min="0.1" max="5" step="0.1" value="1" style="--thumb-size: 20px;">
+        <div slot="help-text" id="turn-speed-value">1.0</div>
+      </sl-range>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+      <sl-range id="cubie-gap-slider" label="Cubie Gap" min="0" max="1" step="0.05" value="0.1" style="--thumb-size: 20px;">
+        <div slot="help-text" id="cubie-gap-value">0.10</div>
+      </sl-range>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+      <sl-range id="hedgehog-angle-slider" label="Hedgehog Angle" min="0" max="55" step="1" value="35" style="--thumb-size: 20px;">
+        <div slot="help-text" id="hedgehog-angle-value">35°</div>
+      </sl-range>
+    </div>
+    
+    <sl-divider></sl-divider>
+    <h3>Cube Colors</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">+W (Purple)</label>
+        <sl-color-picker id="color-plus-w" value="#800080" size="small"></sl-color-picker>
       </div>
-      <div class="color-setting">
-        <div class="color-label">-W (Pink)</div>
-        <input type="color" id="color-minus-w" class="color-input" value="#ff88aa">
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">-W (Pink)</label>
+        <sl-color-picker id="color-minus-w" value="#ff88aa" size="small"></sl-color-picker>
       </div>
-      <div class="color-setting">
-        <div class="color-label">+X (Red)</div>
-        <input type="color" id="color-plus-x" class="color-input" value="#ff0000">
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">+X (Red)</label>
+        <sl-color-picker id="color-plus-x" value="#ff0000" size="small"></sl-color-picker>
       </div>
-      <div class="color-setting">
-        <div class="color-label">-X (Orange)</div>
-        <input type="color" id="color-minus-x" class="color-input" value="#ffa500">
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">-X (Orange)</label>
+        <sl-color-picker id="color-minus-x" value="#ffa500" size="small"></sl-color-picker>
       </div>
-      <div class="color-setting">
-        <div class="color-label">+Y (White)</div>
-        <input type="color" id="color-plus-y" class="color-input" value="#ffffff">
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">+Y (White)</label>
+        <sl-color-picker id="color-plus-y" value="#ffffff" size="small"></sl-color-picker>
       </div>
-      <div class="color-setting">
-        <div class="color-label">-Y (Yellow)</div>
-        <input type="color" id="color-minus-y" class="color-input" value="#ffff00">
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">-Y (Yellow)</label>
+        <sl-color-picker id="color-minus-y" value="#ffff00" size="small"></sl-color-picker>
       </div>
-      <div class="color-setting">
-        <div class="color-label">+Z (Blue)</div>
-        <input type="color" id="color-plus-z" class="color-input" value="#0000ff">
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">+Z (Blue)</label>
+        <sl-color-picker id="color-plus-z" value="#0000ff" size="small"></sl-color-picker>
       </div>
-      <div class="color-setting">
-        <div class="color-label">-Z (Green)</div>
-        <input type="color" id="color-minus-z" class="color-input" value="#00ff00">
+      <div>
+        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">-Z (Green)</label>
+        <sl-color-picker id="color-minus-z" value="#00ff00" size="small"></sl-color-picker>
       </div>
     </div>
   </div>
-</div>
+</sl-drawer>
 
-<div id="info-panel">
-  <button class="info-close" id="info-close">✕</button>
-  <div class="info-header">Controls & Help</div>
-
-  <div class="info-section">
-    <div class="info-section-title">About The Hedgehog</div>
-    <div style="color: #9ca3af; font-size: 14px; line-height: 1.5;">
+<sl-drawer id="info-panel" label="Controls & Help" placement="start">
+  <div style="padding: 1rem;">
+    <h2>About The Hedgehog</h2>
+    <p style="line-height: 1.5;">
       The Hedgehog is a 4D 2x2 Puzzle visualization. It represents a 2x2x2x2 projected into 3D space. The current mode indicator shows which type of moves you can make:
-      <br><br>
-      • <strong>3D Turns:</strong> Turns that affect only one cube<br>
-      • <strong>4D Turns:</strong> Turns that affect portions of each cube<br>
-      • <strong>3D Rotations:</strong> Whole puzzle rotations in 3D<br>
-      • <strong>4D Rotations:</strong> Whole puzzle rotations simulating 4D rotations
-    </div>
-  </div>
+    </p>
+    <ul style="line-height: 1.6;">
+      <li><strong>3D Turns:</strong> Turns that affect only one cube</li>
+      <li><strong>4D Turns:</strong> Turns that affect portions of each cube</li>
+      <li><strong>3D Rotations:</strong> Whole puzzle rotations in 3D</li>
+      <li><strong>4D Rotations:</strong> Whole puzzle rotations simulating 4D rotations</li>
+    </ul>
 
-  <div class="info-section">
-    <div class="info-section-title">Mouse Controls</div>
-    <div class="control-item">
-      <div class="control-key">Click+Drag</div>
-      <div class="control-description">Rotate the camera</div>
+    <h2>Mouse Controls</h2>
+    <div style="display: grid; gap: 0.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <sl-tag size="small">Click+Drag</sl-tag>
+        <span>Rotate the camera</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <sl-tag size="small">Scroll</sl-tag>
+        <span>Zoom in/out</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <sl-tag size="small">Left Click</sl-tag>
+        <span>Clockwise Move</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <sl-tag size="small">Right Click</sl-tag>
+        <span>Counter Clockwise Move</span>
+      </div>
     </div>
-    <div class="control-item">
-      <div class="control-key">Scroll</div>
-      <div class="control-description">Zoom in/out</div>
-    </div>
-    <div class="control-item">
-      <div class="control-key">Left Click</div>
-      <div class="control-description">Clockwise Move</div>
-    </div>
-    <div class="control-item">
-      <div class="control-key">Right Click</div>
-      <div class="control-description">Counter Clockwise Move</div>
+
+    <h2>Mode Modifiers</h2>
+    <div style="display: grid; gap: 0.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <sl-tag size="small">Shift</sl-tag>
+        <span>Hold for 4D turns mode</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <sl-tag size="small">Ctrl</sl-tag>
+        <span>Hold for rotation mode</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <sl-tag size="small">Shift+Ctrl</sl-tag>
+        <span>Hold both for 4D rotations</span>
+      </div>
     </div>
   </div>
-  
-  <div class="info-section">
-    <div class="info-section-title">Mode Modifiers</div>
-    <div class="control-item">
-      <div class="control-key">Shift</div>
-      <div class="control-description">Hold for 4D turns mode</div>
-    </div>
-    <div class="control-item">
-      <div class="control-key">Ctrl</div>
-      <div class="control-description">Hold for rotation mode</div>
-    </div>
-    <div class="control-item">
-      <div class="control-key">Shift+Ctrl</div>
-      <div class="control-description">Hold both for 4D rotations</div>
-    </div>
-  </div>
-</div>
+</sl-drawer>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
