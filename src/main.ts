@@ -7,7 +7,7 @@ import {Config} from "./config.ts";
 import {PerspectiveCamera, Scene, WebGLRenderer} from "three";
 import '@shoelace-style/shoelace/dist/themes/dark.css';
 import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.js';
-
+setBasePath(`${import.meta.env.BASE_URL}shoelace`)
 
 
 let config: Config, scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer, controls: OrbitControls, cube: Cube;
