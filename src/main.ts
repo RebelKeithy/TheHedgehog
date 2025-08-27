@@ -252,13 +252,15 @@ function setupSettingsPanel() {
 
     // Turn Speed control
     if (turnSpeedSlider && turnSpeedValue) {
-        turnSpeedSlider.value = turnController.speed.toString();
-        turnSpeedValue.textContent = turnController.speed.toFixed(1);
+        turnSpeedSlider.value = config.turn_speed.toString();
+        turnSpeedValue.textContent = config.turn_speed.toFixed(1);
         
         turnSpeedSlider.addEventListener('input', (e) => {
+            const config = Config.config();
             const value = parseFloat((e.target as HTMLInputElement).value);
-            turnController.speed = value;
+            config.turn_speed = value;
             turnSpeedValue.textContent = value.toFixed(1);
+            config.saveToLocalStorage()
         });
     }
 
@@ -278,6 +280,9 @@ function setupSettingsPanel() {
             
             // Recreate the cube with new gap
             cube.unification()
+            
+            // Save to local storage
+            config.saveToLocalStorage();
         });
     }
 
@@ -299,6 +304,9 @@ function setupSettingsPanel() {
             
             // Recreate the cube with new angle
             cube.unification()
+            
+            // Save to local storage
+            c.saveToLocalStorage();
         });
     }
     
@@ -324,6 +332,9 @@ function setupSettingsPanel() {
                 config.colors[colorKey] = numericColor;
                 
                 cube.updateColors();
+                
+                // Save to local storage
+                config.saveToLocalStorage();
             });
         }
     });

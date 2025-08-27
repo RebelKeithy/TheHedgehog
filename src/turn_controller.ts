@@ -314,7 +314,7 @@ export class TurnController {
         }
 
         if(this.turning && this.turn) {
-            this.turn.tick(dt * this.speed)
+            this.turn.tick(dt * Config.config().turn_speed * (this.scrambling ? 2 : 1))
             if (this.turn.done()) {
                 this.turn.end()
                 this.turn = undefined

@@ -12,7 +12,7 @@ class StickerInterpolator {
   finalOffset?: Vector3
   finalPosition: Vector3
 
-  constructor(sticker: Sticker, direction: number = 1) {
+  constructor(sticker: Sticker) {
     const config = Config.config()
     this.sticker = sticker
     this.startingRotation = new Quaternion().setFromEuler(sticker.cube.rotation)
