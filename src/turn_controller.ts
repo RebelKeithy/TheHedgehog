@@ -275,6 +275,10 @@ export class TurnController {
     }
 
     public tick(dt: number = 1/60) {
+        if (Config.config().debug_pause) {
+            return
+        }
+
         if (this.scrambling && !this.turning) {
             this._scramble_remaining--
             if (this._scramble_remaining <= 0) {

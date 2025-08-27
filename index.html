@@ -108,6 +108,45 @@
       text-align: right;
     }
     
+    .color-input {
+      width: 60px;
+      height: 40px;
+      border: 1px solid #374151;
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+    }
+    
+    .color-input::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    
+    .color-input::-webkit-color-swatch {
+      border: none;
+      border-radius: 3px;
+    }
+    
+    .colors-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    
+    .color-setting {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .color-label {
+      color: #9ca3af;
+      font-size: 11px;
+      text-align: center;
+    }
+    
     .settings-close {
       position: absolute;
       top: 20px;
@@ -182,6 +221,44 @@
     <label class="setting-label">Hedgehog Angle</label>
     <input type="range" id="hedgehog-angle-slider" class="setting-range" min="0" max="55" step="1" value="35">
     <div class="setting-value" id="hedgehog-angle-value">35°</div>
+  </div>
+  
+  <div class="setting-group">
+    <label class="setting-label">Cube Colors</label>
+    <div class="colors-grid">
+      <div class="color-setting">
+        <div class="color-label">+W (Purple)</div>
+        <input type="color" id="color-plus-w" class="color-input" value="#800080">
+      </div>
+      <div class="color-setting">
+        <div class="color-label">-W (Pink)</div>
+        <input type="color" id="color-minus-w" class="color-input" value="#ff88aa">
+      </div>
+      <div class="color-setting">
+        <div class="color-label">+X (Red)</div>
+        <input type="color" id="color-plus-x" class="color-input" value="#ff0000">
+      </div>
+      <div class="color-setting">
+        <div class="color-label">-X (Orange)</div>
+        <input type="color" id="color-minus-x" class="color-input" value="#ffa500">
+      </div>
+      <div class="color-setting">
+        <div class="color-label">+Y (White)</div>
+        <input type="color" id="color-plus-y" class="color-input" value="#ffffff">
+      </div>
+      <div class="color-setting">
+        <div class="color-label">-Y (Yellow)</div>
+        <input type="color" id="color-minus-y" class="color-input" value="#ffff00">
+      </div>
+      <div class="color-setting">
+        <div class="color-label">+Z (Blue)</div>
+        <input type="color" id="color-plus-z" class="color-input" value="#0000ff">
+      </div>
+      <div class="color-setting">
+        <div class="color-label">-Z (Green)</div>
+        <input type="color" id="color-minus-z" class="color-input" value="#00ff00">
+      </div>
+    </div>
   </div>
 </div>
 <script type="module" src="/src/main.ts"></script>

@@ -294,6 +294,32 @@ function setupSettingsPanel() {
             cube.unification()
         });
     }
+    
+    // Color picker controls
+    const colorInputs = {
+        'plus-w': document.getElementById('color-plus-w') as HTMLInputElement,
+        'minus-w': document.getElementById('color-minus-w') as HTMLInputElement,
+        'plus-x': document.getElementById('color-plus-x') as HTMLInputElement,
+        'minus-x': document.getElementById('color-minus-x') as HTMLInputElement,
+        'plus-y': document.getElementById('color-plus-y') as HTMLInputElement,
+        'minus-y': document.getElementById('color-minus-y') as HTMLInputElement,
+        'plus-z': document.getElementById('color-plus-z') as HTMLInputElement,
+        'minus-z': document.getElementById('color-minus-z') as HTMLInputElement,
+    };
+    
+    Object.entries(colorInputs).forEach(([key, input]) => {
+        if (input) {
+            input.addEventListener('input', (e) => {
+                const hexColor = (e.target as HTMLInputElement).value;
+                const numericColor = parseInt(hexColor.slice(1), 16);
+                
+                const colorKey = key.replace('-', '_') as keyof typeof config.colors;
+                config.colors[colorKey] = numericColor;
+                
+                cube.updateColors();
+            });
+        }
+    });
 }
 
 document.addEventListener('mousedown', (event) => {
@@ -371,25 +397,25 @@ document.addEventListener('mousemove', (event) => {
 document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case 'w':
-            turnController.startTurn(TurnRegistry.AU)
+            turnController.startTurn(TurnRegistry.AU())
             break
         case 's':
-            turnController.startTurn(TurnRegistry.AU)
+            turnController.startTurn(TurnRegistry.AU())
             break
         case 'q':
-            turnController.startTurn(TurnRegistry.AF)
+            turnController.startTurn(TurnRegistry.AF())
             break
         case 'e':
-            turnController.startTurn(TurnRegistry.AF)
+            turnController.startTurn(TurnRegistry.AF())
             break
         case 'a':
-            turnController.startTurn(TurnRegistry.I)
+            turnController.startTurn(TurnRegistry.I())
             break
         case 'd':
-            turnController.startTurn(TurnRegistry.O)
+            turnController.startTurn(TurnRegistry.O())
             break
         case 'p':
-            turnController.scramble()
+            Config.config().debug_pause = !Config.config().debug_pause
             break
         case 'o':
             turnController.gyro()

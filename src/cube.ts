@@ -110,6 +110,14 @@ export class Cube {
             })
         })
     }
+    
+    updateColors() {
+        this.cubies.forEach((c) => {
+            c.stickers.forEach((s) => {
+                s.updateColor()
+            })
+        })
+    }
 }
 
 export class Cubie {
@@ -124,10 +132,10 @@ export class Cubie {
         const w = position.w
         this.pivot = new Group()
         this.pivot.position.copy(p).multiplyScalar(Config.config().cube_size + Config.config().cubie_gap/2);
-        const c0 = new Sticker(this, this.pivot, p, getColor({w: w}), new Vector3(0, 0, 0))
-        const c1 = new Sticker(this, this.pivot, p, getColor({x: w*p.x}), VectorMath.projX(p))
-        const c2 = new Sticker(this, this.pivot, p, getColor({y: p.y}), VectorMath.projY(p))
-        const c3 = new Sticker(this, this.pivot, p, getColor({z: p.z}), VectorMath.projZ(p))
+        const c0 = new Sticker(this, this.pivot, p, getColorId({w: w}), new Vector3(0, 0, 0))
+        const c1 = new Sticker(this, this.pivot, p, getColorId({x: w*p.x}), VectorMath.projX(p))
+        const c2 = new Sticker(this, this.pivot, p, getColorId({y: p.y}), VectorMath.projY(p))
+        const c3 = new Sticker(this, this.pivot, p, getColorId({z: p.z}), VectorMath.projZ(p))
         this.stickers.push(c0, c1, c2, c3)
     }
 
@@ -157,17 +165,17 @@ export class Cubie {
 
 export class Sticker {
     cubie: Cubie
-    color: number
+    colorId: string
     position: Vector3
     offset: Vector3
     cube: Object3D
 
-    constructor(cubie: Cubie, parent: Group, position: Vector3, color: number, offset: Vector3) {
+    constructor(cubie: Cubie, parent: Group, position: Vector3, colorId: string, offset: Vector3) {
         this.cubie = cubie
-        this.color = color
+        this.colorId = colorId
         this.position = position
         this.offset = offset
-        this.cube = createCube(parent, position, color);
+        this.cube = createCube(parent, position, getColorById(this.colorId));
         this.update(position, offset)
     }
 
@@ -277,6 +285,14 @@ export class Sticker {
         const a = new Vector3().crossVectors(this.offset, this.position)
         this.cube.setRotationFromAxisAngle(a.normalize(), angle)
     }
+    
+    updateColor() {
+        const color = getColorById(this.colorId)
+        const mesh = this.cube.children[0] as THREE.Mesh<any, THREE.MeshStandardMaterial>
+        if (mesh && mesh.material) {
+            mesh.material.color.setHex(color)
+        }
+    }
 }
 
 function createCube(parent: Object3D, direction: Vector3, faceColor: number) {
@@ -302,44 +318,35 @@ function createCube(parent: Object3D, direction: Vector3, faceColor: number) {
     return pivot
 }
 
+function getColorById(colorId: string) {
+    const config = Config.config();
+    return config.colors[colorId];
+}
 
-
-// === 4D Cube Representation ===
-const colors = {
-    plus_w:  0x800080, // Purple
-    minus_w: 0xff88aa, // Pink
-    plus_x:  0xff0000, // Red
-    minus_x: 0xffa500, // Orange
-    plus_y:  0xffffff, // White
-    minus_y: 0xffff00, // Yellow
-    plus_z:  0x0000ff, // Blue
-    minus_z: 0x00ff00, // Green
-};
-
-function getColor({x = 0, y = 0, z = 0, w= 0}): number {
+function getColorId({x = 0, y = 0, z = 0, w= 0}): string {
     if (x == 1) {
-        return colors.plus_x
+        return 'plus_x'
     }
     if (x == -1) {
-        return colors.minus_x
+        return 'minus_x'
     }
     if (y == 1) {
-        return colors.plus_y
+        return 'plus_y'
     }
     if (y == -1) {
-        return colors.minus_y
+        return 'minus_y'
     }
     if (z == 1) {
-        return colors.plus_z
+        return 'plus_z'
     }
     if (z == -1) {
-        return colors.minus_z
+        return 'minus_z'
     }
     if (w == 1) {
-        return colors.plus_w
+        return 'plus_w'
     }
     if (w == -1) {
-        return colors.minus_w
+        return 'minus_w'
     }
-    return 0
+    return ''
 }

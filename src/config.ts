@@ -2,6 +2,7 @@
 export class Config {
     private static _instance: Config
 
+    debug_pause: boolean = false
     cube_size: number
     cubie_gap: number
     hedgehog_angle: number
@@ -10,6 +11,8 @@ export class Config {
     _h_angle_rad: number
     angled_cubie_height: number
     w_center_x: number
+    
+    colors: {[key: string]: number}
 
     constructor() {
         this.cube_size = 2
@@ -19,6 +22,17 @@ export class Config {
         this.cubie_pos = this.cube_size + this.cubie_gap/2
         this.angled_cubie_height = this.cube_size * (Math.cos(this._h_angle_rad) + Math.sqrt(2) * Math.sin(this._h_angle_rad))
         this.w_center_x = this.cube_size + this.cubie_gap + this.angled_cubie_height
+        
+        this.colors = {
+            plus_w:  0x800080,
+            minus_w: 0xff88aa,
+            plus_x:  0xff0000,
+            minus_x: 0xffa500,
+            plus_y:  0xffffff,
+            minus_y: 0xffff00,
+            plus_z:  0x0000ff,
+            minus_z: 0x00ff00,
+        }
     }
 
     public static config() {
