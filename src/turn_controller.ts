@@ -58,6 +58,7 @@ export class TurnController {
     scrambling: boolean = false
     _scramble_remaining = 0;
     _scramble_prev_axis = Vectors.zero();
+    _fast_scramble = false;
 
     constructor(scene: Scene, cube: Cube) {
         this.scene = scene
@@ -65,11 +66,16 @@ export class TurnController {
     }
 
     public scramble() {
-        this.scrambling = true
-        this._scramble_remaining = 100
-        Game.game().timer.setSolved(false);
-        Game.game().timer.stop()
-        Game.game().timer.reset()
+        if (this.scrambling) {
+            this._fast_scramble = true
+        } else {
+            this.scrambling = true
+            this._fast_scramble = false
+            this._scramble_remaining = 200
+            Game.game().timer.setSolved(false);
+            Game.game().timer.stop()
+            Game.game().timer.reset()
+        }
     }
 
     public gyro() {
@@ -308,8 +314,9 @@ export class TurnController {
             }
             this.direction = 1
             this.turning = true
-            if (Math.random() < 1 / TurnRegistry.SCRAMBLE_TURNS.length) {
+            if (Math.random() < 2 / TurnRegistry.SCRAMBLE_TURNS.length) {
                 this.turn = new Gyro()
+                this.turn.setDirection(Math.random() > 0.5 ? -1 : 1)
                 this.turn.begin()
             } else {
                 let turn = TurnRegistry.random()
@@ -327,7 +334,14 @@ export class TurnController {
         }
 
         if(this.turning && this.turn) {
-            this.turn.tick(dt * Config.config().turn_speed * (this.scrambling ? 2 : 1))
+            let speedMultiplier = 1
+            if (this.scrambling) {
+                speedMultiplier = 3
+            }
+            if (this._fast_scramble) {
+                speedMultiplier = 10
+            }
+            this.turn.tick(dt * Config.config().turn_speed * speedMultiplier)
             if (this.turn.done()) {
                 this.turn.end()
                 this.turn = undefined
