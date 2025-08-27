@@ -80,7 +80,8 @@ export class Cube {
                 } else if (s.getFace() == CubeFace.K) {
                     s.colorId = getColorId({w: -1})
                 } else {
-                    s.colorId = getColorId({x: s.offset.x, y: s.offset.y, z: s.offset.z})
+                    const w = s.cubie.inLayer(CubeFace.A) ? 1 : -1
+                    s.colorId = getColorId({x: s.offset.x * w, y: s.offset.y, z: s.offset.z})
                 }
                 s.updateColor()
             })
@@ -132,6 +133,23 @@ export class Cube {
                 s.updateColor()
             })
         })
+    }
+
+    isSolved() {
+        const colors: Record<string, string> = {}
+        for (const c of this.cubies) {
+            for (const s of c.stickers) {
+                const face: string = s.getFace() as string
+                if (face in colors) {
+                    if (colors[face] != s.colorId) {
+                        return false
+                    }
+                } else {
+                    colors[face] = s.colorId
+                }
+            }
+        }
+        return true
     }
 }
 

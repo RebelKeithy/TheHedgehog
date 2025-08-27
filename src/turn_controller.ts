@@ -67,6 +67,9 @@ export class TurnController {
     public scramble() {
         this.scrambling = true
         this._scramble_remaining = 100
+        Game.game().timer.setSolved(false);
+        Game.game().timer.stop()
+        Game.game().timer.reset()
     }
 
     public gyro() {
@@ -80,6 +83,7 @@ export class TurnController {
             const timer = Game.game().timer;
             if (!this.scrambling && timer.isEnabled() && !timer.isRunning()) {
                 timer.start();
+                timer.setSolved(false)
             }
             
             this.turn = turn
@@ -201,6 +205,7 @@ export class TurnController {
                 if (!this.scrambling && timer.isEnabled() && !timer.isRunning()) {
                     console.log('Starting timer from clickStart');
                     timer.start();
+                    timer.setSolved(false)
                 }
                 
                 this.turn.setDirection(this.direction)
@@ -327,6 +332,12 @@ export class TurnController {
                 this.turn.end()
                 this.turn = undefined
                 this.turning = false
+                const isSolved = this.cube.isSolved();
+                console.log(`Solved ${isSolved}`);
+                if (isSolved && Game.game().timer.isRunning()) {
+                    Game.game().timer.stop();
+                    Game.game().timer.setSolved(true);
+                }
             }
         }
     }

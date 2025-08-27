@@ -158,6 +158,7 @@ function init() {
         cube.reset();
         Game.game().timer.stop();
         Game.game().timer.reset();
+        Game.game().timer.setSolved(false);
     });
     document.getElementById('timer-toggle')?.addEventListener('click', () => {
         const enabled = game.timer.toggle();

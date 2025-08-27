@@ -76,4 +76,14 @@ export class Timer {
     isRunning() {
         return this.running;
     }
+
+    setSolved(solved: boolean) {
+        if (this.displayElement) {
+            if (solved) {
+                this.displayElement.style.color = '#4CAF50'; // green-400
+            } else {
+                this.displayElement.style.color = 'var(--sl-color-neutral-700)'; // reset to default
+            }
+        }
+    }
 }
