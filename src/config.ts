@@ -18,7 +18,7 @@ export class Config {
         this._h_angle_rad = Math.PI/180 * this.hedgehog_angle
         this.cubie_pos = this.cube_size + this.cubie_gap/2
         this.angled_cubie_height = this.cube_size * (Math.cos(this._h_angle_rad) + Math.sqrt(2) * Math.sin(this._h_angle_rad))
-        this.w_center_x = this.cube_size + this.cubie_gap/2 + this.angled_cubie_height
+        this.w_center_x = this.cube_size + this.cubie_gap + this.angled_cubie_height
     }
 
     public static config() {
@@ -26,5 +26,13 @@ export class Config {
             Config._instance = new Config()
         }
         return Config._instance
+    }
+
+    public pivot_offset() {
+        return this.cubie_gap/2 + this.cube_size
+    }
+
+    public cubie_center() {
+        return this.cubie_gap/2 + this.cube_size/2
     }
 }

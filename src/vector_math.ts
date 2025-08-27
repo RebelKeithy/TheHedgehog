@@ -72,7 +72,10 @@ export class VectorMath {
         return new Vector3(0, 0, v.z)
     }
 
-    static argmax(v: Vector3) {
+    static argmax(v: Vector3, threshold: number=0.001) {
+        if (Math.abs(v.x) < threshold && Math.abs(v.y) < threshold && Math.abs(v.z) < threshold) {
+            return new Vector3(0, 0, 0)
+        }
         if (Math.abs(v.x) > Math.abs(v.y) && Math.abs(v.x) > Math.abs(v.z)) {
             return new Vector3(v.x, 0, 0)
         } else if(Math.abs(v.y) > Math.abs(v.z)) {

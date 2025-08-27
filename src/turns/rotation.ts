@@ -5,12 +5,12 @@ import {Game} from "../game.ts";
 import {Vectors} from "../vector_math.ts";
 
 export class Rotation implements ITurn {
-  static U = new Rotation(Vectors.down(), Math.PI)
-  static D = new Rotation(Vectors.up(), Math.PI)
-  static F = new Rotation(Vectors.back(), Math.PI)
-  static B = new Rotation(Vectors.front(), Math.PI)
-  static R = new Rotation(Vectors.left())
-  static L = new Rotation(Vectors.right())
+  static U = () => new Rotation(Vectors.down(), Math.PI)
+  static D = () => new Rotation(Vectors.up(), Math.PI)
+  static F = () => new Rotation(Vectors.back(), Math.PI)
+  static B = () => new Rotation(Vectors.front(), Math.PI)
+  static R = () => new Rotation(Vectors.left())
+  static L = () => new Rotation(Vectors.right())
 
   axis: Vector3
   root: Group

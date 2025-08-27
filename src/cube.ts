@@ -73,6 +73,32 @@ export class Cube {
     }
 
     unification() {
+        const config = Config.config()
+        this.cubies.forEach((c) => {
+            if (c.pivot.position.x < 0) {
+                if (c.pivot.position.x < -config.w_center_x) {
+                    c.pivot.position.setX(-config.w_center_x - config.pivot_offset())
+                } else {
+                    c.pivot.position.setX(-config.w_center_x + config.pivot_offset())
+                }
+            } else {
+                if (c.pivot.position.x < config.w_center_x) {
+                    c.pivot.position.setX(config.w_center_x - config.pivot_offset())
+                } else {
+                    c.pivot.position.setX(config.w_center_x + config.pivot_offset())
+                }
+            }
+            if (c.pivot.position.y < 0) {
+                c.pivot.position.y = -config.pivot_offset()
+            } else {
+                c.pivot.position.y = config.pivot_offset()
+            }
+            if (c.pivot.position.z < 0) {
+                c.pivot.position.z = -config.pivot_offset()
+            } else {
+                c.pivot.position.z = config.pivot_offset()
+            }
+        })
         this.cubies.forEach((c) => {
             c.stickers.forEach((s) => {
                 s.unification()
@@ -153,17 +179,19 @@ export class Sticker {
         const config = Config.config()
         const pivotPos = this.cubie.pivot.getWorldPosition(new Vector3())
         const stickerPos = this.cube.children[0].getWorldPosition(new Vector3())
-        const offset = VectorMath.argmax(stickerPos.clone().sub(pivotPos)).normalize()
-        if (-config.cube_size/2 - config.cubie_pos < stickerPos.y && stickerPos.y < config.cube_size/2 + config.cubie_gap &&
-            -config.cube_size/2 - config.cubie_pos < stickerPos.z && stickerPos.z < config.cube_size/2 + config.cubie_gap &&
-            -config.w_center_x -config.cube_size/2 - config.cubie_pos < stickerPos.x && stickerPos.x < -config.w_center_x + config.cube_size/2 + config.cubie_gap) {
-            return CubeFace.A
+        let anna = true
+        if (pivotPos.x < 0) {
+            pivotPos.x += config.w_center_x
+            stickerPos.x += config.w_center_x
+        } else {
+            anna = false
+            pivotPos.x -= config.w_center_x
+            stickerPos.x -= config.w_center_x
         }
-        if (-config.cube_size/2 - config.cubie_pos < stickerPos.y && stickerPos.y < config.cube_size/2 + config.cubie_gap &&
-            -config.cube_size/2 - config.cubie_pos < stickerPos.z && stickerPos.z < config.cube_size/2 + config.cubie_gap &&
-            config.w_center_x -config.cube_size/2 - config.cubie_pos < stickerPos.x && stickerPos.x < config.w_center_x + config.cube_size/2 + config.cubie_gap) {
-            return CubeFace.K
-        }
+        pivotPos.copy(VectorMath.unify(pivotPos).multiplyScalar(config.cubie_center()))
+
+        const offsetPos = stickerPos.clone().sub(pivotPos)
+        const offset = VectorMath.argmax(offsetPos, config.cube_size/2).normalize()
         if (offset.y > 0.5) {
             return CubeFace.U
         }
@@ -189,6 +217,11 @@ export class Sticker {
             } else {
                 return CubeFace.R
             }
+        }
+        if (anna) {
+            return CubeFace.A
+        } else{
+            return CubeFace.K
         }
         throw Error("Could not compute face for sticker")
     }
@@ -226,8 +259,6 @@ export class Sticker {
                 this.offset = Vectors.zero()
         }
         this.update(this.position, this.offset)
-        console.log(this.position)
-        console.log(this.offset)
     }
 
     update(position: Vector3, offset: Vector3) {
@@ -236,12 +267,9 @@ export class Sticker {
         this.offset = offset
         const nonOffset: Vector3 = position.clone().multiplyScalar(-config.cube_size/2)
         this.cube.children[0].position.copy(nonOffset)
-        this.cube.children[1].position.copy(nonOffset)
         if (offset) {
             this.cube.children[0].position.add(offset.clone().multiplyScalar(config.cube_size))
-            this.cube.children[1].position.add(offset.clone().multiplyScalar(config.cube_size))
         }
-        console.log(this.cube.children[0].getWorldPosition(new Vector3()))
         this.setRotation(config._h_angle_rad)
     }
 
@@ -269,7 +297,7 @@ function createCube(parent: Object3D, direction: Vector3, faceColor: number) {
     //     cubie2.position.add(offset.clone().multiplyScalar(config.cube_size))
     // }
     pivot.attach(cubie)
-    pivot.attach(cubie2)
+    cubie.attach(cubie2)
     parent.attach(pivot)
     return pivot
 }

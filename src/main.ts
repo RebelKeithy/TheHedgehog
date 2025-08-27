@@ -103,7 +103,7 @@ function createVignetteBackground() {
 
 
 function init() {
-    config = new Config()
+    config = Config.config()
     // Scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a1a);
@@ -149,6 +149,8 @@ function init() {
         });
     }
 
+    setupSettingsPanel();
+
     window.addEventListener('resize', onWindowResize, false);
 }
 
@@ -179,13 +181,118 @@ function updateModeIndicator() {
     if (!indicator) return;
     
     if (shiftPressed && ctrlPressed) {
-        indicator.textContent = '4D Rotations';
+        indicator.textContent = 'Mode: 4D Rotations';
     } else if (shiftPressed) {
-        indicator.textContent = '4D Turns';
+        indicator.textContent = 'Mode: 4D Turns';
     } else if (ctrlPressed) {
-        indicator.textContent = '3D Rotations';
+        indicator.textContent = 'Mode: 3D Rotations';
     } else {
-        indicator.textContent = '3D Turns';
+        indicator.textContent = 'Mode: 3D Turns';
+    }
+}
+
+function setupSettingsPanel() {
+    const settingsToggle = document.getElementById('settings-toggle');
+    const settingsPanel = document.getElementById('settings-panel');
+    const settingsOverlay = document.getElementById('settings-overlay');
+    const settingsClose = document.getElementById('settings-close');
+    const turnSpeedSlider = document.getElementById('turn-speed-slider') as HTMLInputElement;
+    const turnSpeedValue = document.getElementById('turn-speed-value');
+    const cubieGapSlider = document.getElementById('cubie-gap-slider') as HTMLInputElement;
+    const cubieGapValue = document.getElementById('cubie-gap-value');
+    const hedgehogAngleSlider = document.getElementById('hedgehog-angle-slider') as HTMLInputElement;
+    const hedgehogAngleValue = document.getElementById('hedgehog-angle-value');
+
+    if (!settingsToggle || !settingsPanel) return;
+
+    // Toggle settings panel
+    settingsToggle.addEventListener('click', () => {
+        settingsPanel.classList.toggle('open');
+        if (settingsOverlay) {
+            settingsOverlay.classList.toggle('open');
+        }
+    });
+
+    // Close settings panel
+    if (settingsClose) {
+        settingsClose.addEventListener('click', () => {
+            settingsPanel.classList.remove('open');
+            if (settingsOverlay) {
+                settingsOverlay.classList.remove('open');
+            }
+        });
+    }
+
+    // Close settings panel when clicking on overlay
+    if (settingsOverlay) {
+        settingsOverlay.addEventListener('click', () => {
+            settingsPanel.classList.remove('open');
+            settingsOverlay.classList.remove('open');
+        });
+    }
+
+    // Close settings panel when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!settingsPanel.contains(e.target as Node) && 
+            !settingsToggle.contains(e.target as Node) && 
+            settingsPanel.classList.contains('open')) {
+            settingsPanel.classList.remove('open');
+            if (settingsOverlay) {
+                settingsOverlay.classList.remove('open');
+            }
+        }
+    });
+
+    // Turn Speed control
+    if (turnSpeedSlider && turnSpeedValue) {
+        turnSpeedSlider.value = turnController.speed.toString();
+        turnSpeedValue.textContent = turnController.speed.toFixed(1);
+        
+        turnSpeedSlider.addEventListener('input', (e) => {
+            const value = parseFloat((e.target as HTMLInputElement).value);
+            turnController.speed = value;
+            turnSpeedValue.textContent = value.toFixed(1);
+        });
+    }
+
+    // Cubie Gap control
+    if (cubieGapSlider && cubieGapValue) {
+        cubieGapSlider.value = (config.cubie_gap/2).toString();
+        cubieGapValue.textContent = (config.cubie_gap/2).toFixed(2);
+        
+        cubieGapSlider.addEventListener('input', (e) => {
+            const value = parseFloat((e.target as HTMLInputElement).value);
+            config.cubie_gap = value * 2;
+            cubieGapValue.textContent = value.toFixed(2);
+            
+            // Recalculate dependent values
+            config.cubie_pos = config.cube_size + config.cubie_gap/2;
+            config.w_center_x = config.cube_size + config.cubie_gap + config.angled_cubie_height;
+            
+            // Recreate the cube with new gap
+            cube.unification()
+        });
+    }
+
+    // Hedgehog Angle control
+    if (hedgehogAngleSlider && hedgehogAngleValue) {
+        const c = Game.game().config
+        hedgehogAngleSlider.value = c.hedgehog_angle.toString();
+        hedgehogAngleValue.textContent = `${c.hedgehog_angle}°`;
+        
+        hedgehogAngleSlider.addEventListener('input', (e) => {
+            const value = parseFloat((e.target as HTMLInputElement).value);
+            c.hedgehog_angle = value;
+            hedgehogAngleValue.textContent = `${value}°`;
+            
+            // Recalculate dependent values
+            c._h_angle_rad = Math.PI/180 * c.hedgehog_angle;
+            c.angled_cubie_height = c.cube_size * (Math.cos(c._h_angle_rad) + Math.sqrt(2) * Math.sin(c._h_angle_rad));
+            c.w_center_x = c.cube_size + c.cubie_gap + c.angled_cubie_height;
+            
+            // Recreate the cube with new angle
+            cube.unification()
+        });
     }
 }
 
@@ -287,8 +394,17 @@ document.addEventListener('keydown', (event) => {
         case 'o':
             turnController.gyro()
             break
+        case 'i':
+            cube.unification()
+            break
     }
 });
 
 init();
+
+// Initialize Lucide icons
+if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+}
+
 animate();

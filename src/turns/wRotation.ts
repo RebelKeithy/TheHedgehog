@@ -6,12 +6,12 @@ import {Config} from "../config.ts";
 import {Vectors} from "../vector_math.ts";
 
 export class WRotation implements ITurn {
-  static U = new WRotation(Vectors.down())
-  static D = new WRotation(Vectors.up())
-  static F = new WRotation(Vectors.back())
-  static B = new WRotation(Vectors.front())
-  static R = new WRotation(Vectors.left())
-  static L = new WRotation(Vectors.right())
+  static U = () => new WRotation(Vectors.down())
+  static D = () => new WRotation(Vectors.up())
+  static F = () => new WRotation(Vectors.back())
+  static B = () => new WRotation(Vectors.front())
+  static R = () => new WRotation(Vectors.left())
+  static L = () => new WRotation(Vectors.right())
 
   axis: Vector3
   annaCubies: Group

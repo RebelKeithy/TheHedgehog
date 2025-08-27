@@ -9,25 +9,25 @@ import {Turn} from "./turns/turn.ts";
 import {Gyro} from "./turns/gyro.ts";
 
 export class TurnRegistry {
-    static AR = new Turn(Vectors.left(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
-    static AL = new Turn(Vectors.right(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
-    static AU = new Turn(Vectors.down(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
-    static AD = new Turn(Vectors.up(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
-    static AF = new Turn(Vectors.back(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
-    static AB = new Turn(Vectors.front(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
-    static KR = new Turn(Vectors.right(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
-    static KL = new Turn(Vectors.left(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
-    static KU = new Turn(Vectors.down(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
-    static KD = new Turn(Vectors.up(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
-    static KF = new Turn(Vectors.back(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
-    static KB = new Turn(Vectors.front(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
+    static AR = () => new Turn(Vectors.left(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
+    static AL = () => new Turn(Vectors.right(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
+    static AU = () => new Turn(Vectors.down(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
+    static AD = () => new Turn(Vectors.up(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
+    static AF = () => new Turn(Vectors.back(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
+    static AB = () => new Turn(Vectors.front(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
+    static KR = () => new Turn(Vectors.right(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
+    static KL = () => new Turn(Vectors.left(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
+    static KU = () => new Turn(Vectors.down(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
+    static KD = () => new Turn(Vectors.up(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
+    static KF = () => new Turn(Vectors.back(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
+    static KB = () => new Turn(Vectors.front(), new Vector3(Config.config().w_center_x, 0, 0), 1, SliceSelectors.K)
 
-    static U = new Turn(Vectors.down(), Vectors.zero(), 2, SliceSelectors.U)
-    static D = new Turn(Vectors.up(), Vectors.zero(), 2, SliceSelectors.D)
-    static F = new Turn(Vectors.back(), Vectors.zero(), 2, SliceSelectors.F)
-    static B = new Turn(Vectors.front(), Vectors.zero(), 2, SliceSelectors.B)
-    static I = new Turn(Vectors.right(), Vectors.zero(), 1, SliceSelectors.I)
-    static O = new Turn(Vectors.left(), Vectors.zero(), 1, SliceSelectors.O)
+    static U = () => new Turn(Vectors.down(), Vectors.zero(), 2, SliceSelectors.U)
+    static D = () => new Turn(Vectors.up(), Vectors.zero(), 2, SliceSelectors.D)
+    static F = () => new Turn(Vectors.back(), Vectors.zero(), 2, SliceSelectors.F)
+    static B = () => new Turn(Vectors.front(), Vectors.zero(), 2, SliceSelectors.B)
+    static I = () => new Turn(Vectors.right(), Vectors.zero(), 1, SliceSelectors.I)
+    static O = () => new Turn(Vectors.left(), Vectors.zero(), 1, SliceSelectors.O)
 
     static SCRAMBLE_TURNS = [TurnRegistry.AR, TurnRegistry.AL, TurnRegistry.AU, TurnRegistry.AD, TurnRegistry.AF, TurnRegistry.AB,
         TurnRegistry.KR, TurnRegistry.KL, TurnRegistry.KU, TurnRegistry.KD, TurnRegistry.KF, TurnRegistry.KB,
@@ -36,7 +36,7 @@ export class TurnRegistry {
     ]
 
     public static random(): ITurn {
-        return TurnRegistry.SCRAMBLE_TURNS[Math.floor(Math.random() * TurnRegistry.SCRAMBLE_TURNS.length)]
+        return TurnRegistry.SCRAMBLE_TURNS[Math.floor(Math.random() * TurnRegistry.SCRAMBLE_TURNS.length)]()
     }
 }
 
@@ -105,83 +105,83 @@ export class TurnController {
             switch(face) {
                 case CubeFace.U:
                     if (this.shift && this.ctrl) {
-                        this.turn = WRotation.U
+                        this.turn = WRotation.U()
                     }
                     else if (this.ctrl) {
-                        this.turn = Rotation.U
+                        this.turn = Rotation.U()
                     } else if (this.shift) {
-                        this.turn = TurnRegistry.U
+                        this.turn = TurnRegistry.U()
                     } else if (kata) {
-                        this.turn = TurnRegistry.KU
+                        this.turn = TurnRegistry.KU()
                     } else {
-                        this.turn = TurnRegistry.AU
+                        this.turn = TurnRegistry.AU()
                     }
                     break
                 case CubeFace.D:
                     if (this.shift && this.ctrl) {
-                        this.turn = WRotation.D
+                        this.turn = WRotation.D()
                     } else if (this.ctrl) {
-                        this.turn = Rotation.D
+                        this.turn = Rotation.D()
                     } else if (this.shift) {
-                        this.turn = TurnRegistry.D
+                        this.turn = TurnRegistry.D()
                     } else if (kata) {
-                        this.turn = TurnRegistry.KD
+                        this.turn = TurnRegistry.KD()
                     } else {
-                        this.turn = TurnRegistry.AD
+                        this.turn = TurnRegistry.AD()
                     }
                     break
                 case CubeFace.F:
                     if (this.shift && this.ctrl) {
-                        this.turn = Rotation.F
+                        this.turn = Rotation.F()
                     } else if (this.ctrl) {
-                        this.turn = WRotation.F
+                        this.turn = WRotation.F()
                     } else if (this.shift) {
-                        this.turn = TurnRegistry.F
+                        this.turn = TurnRegistry.F()
                     } else if (kata) {
-                        this.turn = TurnRegistry.KF
+                        this.turn = TurnRegistry.KF()
                     } else {
-                        this.turn = TurnRegistry.AF
+                        this.turn = TurnRegistry.AF()
                     }
                     break
                 case CubeFace.B:
                     if (this.shift && this.ctrl) {
-                        this.turn = Rotation.B
+                        this.turn = Rotation.B()
                     } else if (this.ctrl) {
-                        this.turn = WRotation.B
+                        this.turn = WRotation.B()
                     } else if (this.shift) {
-                        this.turn = TurnRegistry.B
+                        this.turn = TurnRegistry.B()
                     } else if (kata) {
-                        this.turn = TurnRegistry.KB
+                        this.turn = TurnRegistry.KB()
                     } else {
-                        this.turn = TurnRegistry.AB
+                        this.turn = TurnRegistry.AB()
                     }
                     break
                 case CubeFace.L:
                     if (this.shift && this.ctrl) {
-                        this.turn = Rotation.L
+                        this.turn = Rotation.L()
                         this.turn.setDirection(kata ? -1 : 1)
                     } else if (this.ctrl) {
                         this.turn = new Gyro()
                     } else if (this.shift) {
-                        this.turn = TurnRegistry.O
+                        this.turn = TurnRegistry.O()
                     } else if (kata) {
-                        this.turn = TurnRegistry.KL
+                        this.turn = TurnRegistry.KL()
                     } else {
-                        this.turn = TurnRegistry.AL
+                        this.turn = TurnRegistry.AL()
                     }
                     break
                 case CubeFace.R:
                     if (this.shift && this.ctrl) {
-                        this.turn = Rotation.R
+                        this.turn = Rotation.R()
                         this.turn.setDirection(kata ? -1 : 1)
                     } else if (this.ctrl) {
                         this.turn = new Gyro()
                     } else if (this.shift) {
-                        this.turn = TurnRegistry.I
+                        this.turn = TurnRegistry.I()
                     } else if (kata) {
-                        this.turn = TurnRegistry.KR
+                        this.turn = TurnRegistry.KR()
                     } else {
-                        this.turn = TurnRegistry.AR
+                        this.turn = TurnRegistry.AR()
                     }
                     break
             }
