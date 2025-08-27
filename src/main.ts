@@ -107,9 +107,6 @@ function createVignetteBackground() {
 
 
 function init() {
-    // Set up Shoelace base path
-    setBasePath('/node_modules/@shoelace-style/shoelace/dist');
-    
     // Apply dark theme to document
     document.documentElement.classList.add('sl-theme-dark');
     
