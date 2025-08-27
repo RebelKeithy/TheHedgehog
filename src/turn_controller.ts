@@ -106,6 +106,7 @@ export class TurnController {
                 case CubeFace.U:
                     if (this.shift && this.ctrl) {
                         this.turn = WRotation.U()
+                        this.direction *= kata ? -1 : 1
                     }
                     else if (this.ctrl) {
                         this.turn = Rotation.U()
@@ -120,6 +121,7 @@ export class TurnController {
                 case CubeFace.D:
                     if (this.shift && this.ctrl) {
                         this.turn = WRotation.D()
+                        this.direction *= kata ? -1 : 1
                     } else if (this.ctrl) {
                         this.turn = Rotation.D()
                     } else if (this.shift) {
@@ -132,9 +134,10 @@ export class TurnController {
                     break
                 case CubeFace.F:
                     if (this.shift && this.ctrl) {
-                        this.turn = Rotation.F()
-                    } else if (this.ctrl) {
                         this.turn = WRotation.F()
+                        this.direction *= kata ? -1 : 1
+                    } else if (this.ctrl) {
+                        this.turn = Rotation.F()
                     } else if (this.shift) {
                         this.turn = TurnRegistry.F()
                     } else if (kata) {
@@ -145,9 +148,10 @@ export class TurnController {
                     break
                 case CubeFace.B:
                     if (this.shift && this.ctrl) {
-                        this.turn = Rotation.B()
-                    } else if (this.ctrl) {
                         this.turn = WRotation.B()
+                        this.direction *= kata ? -1 : 1
+                    } else if (this.ctrl) {
+                        this.turn = Rotation.B()
                     } else if (this.shift) {
                         this.turn = TurnRegistry.B()
                     } else if (kata) {
@@ -158,12 +162,14 @@ export class TurnController {
                     break
                 case CubeFace.L:
                     if (this.shift && this.ctrl) {
-                        this.turn = Rotation.L()
-                        this.turn.setDirection(kata ? -1 : 1)
-                    } else if (this.ctrl) {
                         this.turn = new Gyro()
+                        this.direction *= kata ? 1 : -1
+                    } else if (this.ctrl) {
+                        this.turn = Rotation.L()
+                        this.direction *= kata ? -1 : 1
                     } else if (this.shift) {
                         this.turn = TurnRegistry.O()
+                        this.direction *= kata ? 1 : -1
                     } else if (kata) {
                         this.turn = TurnRegistry.KL()
                     } else {
@@ -172,12 +178,14 @@ export class TurnController {
                     break
                 case CubeFace.R:
                     if (this.shift && this.ctrl) {
-                        this.turn = Rotation.R()
-                        this.turn.setDirection(kata ? -1 : 1)
-                    } else if (this.ctrl) {
                         this.turn = new Gyro()
+                        this.direction *= kata ? -1 : 1
+                    } else if (this.ctrl) {
+                        this.turn = Rotation.R()
+                        this.direction *= kata ? -1 : 1
                     } else if (this.shift) {
                         this.turn = TurnRegistry.I()
+                        this.direction *= kata ? 1 : -1
                     } else if (kata) {
                         this.turn = TurnRegistry.KR()
                     } else {
