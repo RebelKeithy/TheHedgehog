@@ -157,6 +157,7 @@ function init() {
     }
 
     setupSettingsPanel();
+    setupInfoPanel();
 
     window.addEventListener('resize', onWindowResize, false);
 }
@@ -336,6 +337,53 @@ function setupSettingsPanel() {
                 // Save to local storage
                 config.saveToLocalStorage();
             });
+        }
+    });
+}
+
+function setupInfoPanel() {
+    const infoToggle = document.getElementById('info-toggle');
+    const infoPanel = document.getElementById('info-panel');
+    const infoOverlay = document.getElementById('info-overlay');
+    const infoClose = document.getElementById('info-close');
+
+    if (!infoToggle || !infoPanel) return;
+
+    // Toggle info panel
+    infoToggle.addEventListener('click', () => {
+        infoPanel.classList.toggle('open');
+        if (infoOverlay) {
+            infoOverlay.classList.toggle('open');
+        }
+    });
+
+    // Close info panel
+    if (infoClose) {
+        infoClose.addEventListener('click', () => {
+            infoPanel.classList.remove('open');
+            if (infoOverlay) {
+                infoOverlay.classList.remove('open');
+            }
+        });
+    }
+
+    // Close info panel when clicking on overlay
+    if (infoOverlay) {
+        infoOverlay.addEventListener('click', () => {
+            infoPanel.classList.remove('open');
+            infoOverlay.classList.remove('open');
+        });
+    }
+
+    // Close info panel when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!infoPanel.contains(e.target as Node) && 
+            !infoToggle.contains(e.target as Node) && 
+            infoPanel.classList.contains('open')) {
+            infoPanel.classList.remove('open');
+            if (infoOverlay) {
+                infoOverlay.classList.remove('open');
+            }
         }
     });
 }

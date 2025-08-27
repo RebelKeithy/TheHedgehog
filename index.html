@@ -182,6 +182,110 @@
       opacity: 1;
       visibility: visible;
     }
+    
+    /* Info Panel Styles */
+    #info-panel {
+      position: fixed;
+      top: 0;
+      left: -400px;
+      width: 400px;
+      height: 100vh;
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid #1f2937;
+      transition: left 0.3s ease-in-out;
+      z-index: 1000;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+    
+    #info-panel.open {
+      left: 0;
+    }
+    
+    .info-header {
+      color: #cdd6f4;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #1f2937;
+      padding-bottom: 10px;
+    }
+    
+    .info-section {
+      margin-bottom: 24px;
+    }
+    
+    .info-section-title {
+      color: #60a5fa;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+    
+    .control-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding: 4px 0;
+    }
+    
+    .control-key {
+      background: rgba(31, 41, 55, 0.8);
+      border: 1px solid #374151;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #cdd6f4;
+      font-size: 12px;
+      min-width: 60px;
+      text-align: center;
+    }
+    
+    .control-description {
+      color: #9ca3af;
+      font-size: 14px;
+      flex: 1;
+      margin-left: 12px;
+    }
+    
+    .info-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: #9ca3af;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.2s;
+    }
+    
+    .info-close:hover {
+      color: #cdd6f4;
+    }
+    
+    .info-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+      z-index: 999;
+    }
+    
+    .info-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
   </style>
 </head>
 <body>
@@ -196,6 +300,9 @@
   <button id="settings-toggle" class="key-indicator">
     <i data-lucide="settings" style="width: 16px; height: 16px; vertical-align: middle;"></i>
   </button>
+  <button id="info-toggle" class="key-indicator" style="margin-left: 8px;">
+    <i data-lucide="help-circle" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+  </button>
 </div>
 
 <div class="mode-indicator-container">
@@ -203,6 +310,7 @@
 </div>
 
 <div class="settings-overlay" id="settings-overlay"></div>
+<div class="info-overlay" id="info-overlay"></div>
 
 <div id="settings-panel">
   <button class="settings-close" id="settings-close">✕</button>
@@ -261,6 +369,59 @@
         <div class="color-label">-Z (Green)</div>
         <input type="color" id="color-minus-z" class="color-input" value="#00ff00">
       </div>
+    </div>
+  </div>
+</div>
+
+<div id="info-panel">
+  <button class="info-close" id="info-close">✕</button>
+  <div class="info-header">Controls & Help</div>
+
+  <div class="info-section">
+    <div class="info-section-title">About The Hedgehog</div>
+    <div style="color: #9ca3af; font-size: 14px; line-height: 1.5;">
+      The Hedgehog is a 4D 2x2 Puzzle visualization. It represents a 2x2x2x2 projected into 3D space. The current mode indicator shows which type of moves you can make:
+      <br><br>
+      • <strong>3D Turns:</strong> Turns that affect only one cube<br>
+      • <strong>4D Turns:</strong> Turns that affect portions of each cube<br>
+      • <strong>3D Rotations:</strong> Whole puzzle rotations in 3D<br>
+      • <strong>4D Rotations:</strong> Whole puzzle rotations simulating 4D rotations
+    </div>
+  </div>
+
+  <div class="info-section">
+    <div class="info-section-title">Mouse Controls</div>
+    <div class="control-item">
+      <div class="control-key">Click+Drag</div>
+      <div class="control-description">Rotate the camera</div>
+    </div>
+    <div class="control-item">
+      <div class="control-key">Scroll</div>
+      <div class="control-description">Zoom in/out</div>
+    </div>
+    <div class="control-item">
+      <div class="control-key">Left Click</div>
+      <div class="control-description">Clockwise Move</div>
+    </div>
+    <div class="control-item">
+      <div class="control-key">Right Click</div>
+      <div class="control-description">Counter Clockwise Move</div>
+    </div>
+  </div>
+  
+  <div class="info-section">
+    <div class="info-section-title">Mode Modifiers</div>
+    <div class="control-item">
+      <div class="control-key">Shift</div>
+      <div class="control-description">Hold for 4D turns mode</div>
+    </div>
+    <div class="control-item">
+      <div class="control-key">Ctrl</div>
+      <div class="control-description">Hold for rotation mode</div>
+    </div>
+    <div class="control-item">
+      <div class="control-key">Shift+Ctrl</div>
+      <div class="control-description">Hold both for 4D rotations</div>
     </div>
   </div>
 </div>
