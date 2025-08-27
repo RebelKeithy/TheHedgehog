@@ -9,6 +9,10 @@
     /* Essential layout styles only */
     html, body { margin: 0; height: 100%; }
     
+    /* Hide content until CSS is fully loaded */
+    body { visibility: hidden; }
+    body.loaded { visibility: visible; }
+    
     .title { 
       position: absolute;
       color: var(--sl-color-neutral-700);
@@ -164,6 +168,12 @@
     </div>
   </div>
 </sl-drawer>
+<script>
+  // Show content once all resources are loaded
+  window.addEventListener('load', function() {
+    document.body.classList.add('loaded');
+  });
+</script>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
