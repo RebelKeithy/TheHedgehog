@@ -12,6 +12,7 @@ import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.j
 
 let config: Config, scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer, controls: OrbitControls, cube: Cube;
 let turnController: TurnController;
+let game: Game;
 
 // Vignette+Noise full-screen background (clip-space quad)
 function createVignetteBackground() {
@@ -149,11 +150,22 @@ function init() {
     scene.add(directionalLight);
 
     cube = new Cube(scene)
-    new Game(config, scene, cube)
+    game = new Game(config, scene, cube)
     turnController = new TurnController(scene, cube)
 
     document.getElementById('scramble-btn')?.addEventListener('click', () => turnController.scramble());
-    document.getElementById('reset-btn')?.addEventListener('click', () => cube.reset());
+    document.getElementById('reset-btn')?.addEventListener('click', () => {
+        cube.reset();
+        Game.game().timer.stop();
+        Game.game().timer.reset();
+    });
+    document.getElementById('timer-toggle')?.addEventListener('click', () => {
+        const enabled = game.timer.toggle();
+        if (enabled) {
+            // Reset first move flag when timer is enabled
+            Game.game().timer.stop();
+        }
+    });
 
     setupSettingsPanel();
     setupInfoPanel();

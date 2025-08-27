@@ -1,12 +1,14 @@
 import type {Config} from "./config.ts";
 import type {Cube} from "./cube.ts";
 import type {Scene} from "three";
+import {Timer} from "./ui/timer.ts";
 
 export class Game {
     private static _instance: Game
     config: Config;
     scene;
     cube: Cube;
+    timer: Timer;
 
     public static game(): Game {
         return Game._instance
@@ -17,5 +19,6 @@ export class Game {
         this.config = config
         this.scene = scene
         this.cube = cube
+        this.timer = new Timer()
     }
 }

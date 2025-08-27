@@ -7,6 +7,7 @@ import {WRotation} from "./turns/wRotation.ts";
 import {Rotation} from "./turns/rotation.ts";
 import {Turn} from "./turns/turn.ts";
 import {Gyro} from "./turns/gyro.ts";
+import {Game} from "./game.ts";
 
 export class TurnRegistry {
     static AR = () => new Turn(Vectors.left(), new Vector3(-Config.config().w_center_x, 0, 0), 1, SliceSelectors.A)
@@ -54,8 +55,6 @@ export class TurnController {
 
     turn_mode: string = "click"
 
-    speed: number = 1
-
     scrambling: boolean = false
     _scramble_remaining = 0;
     _scramble_prev_axis = Vectors.zero();
@@ -68,7 +67,6 @@ export class TurnController {
     public scramble() {
         this.scrambling = true
         this._scramble_remaining = 100
-        this.speed = 5
     }
 
     public gyro() {
@@ -79,6 +77,11 @@ export class TurnController {
 
     public startTurn(turn: ITurn) {
         if (!this.turning) {
+            const timer = Game.game().timer;
+            if (!this.scrambling && timer.isEnabled() && !timer.isRunning()) {
+                timer.start();
+            }
+            
             this.turn = turn
             this.turning = true
             this.turn.begin()
@@ -194,6 +197,12 @@ export class TurnController {
                     break
             }
             if (this.turn) {
+                const timer = Game.game().timer;
+                if (!this.scrambling && timer.isEnabled() && !timer.isRunning()) {
+                    console.log('Starting timer from clickStart');
+                    timer.start();
+                }
+                
                 this.turn.setDirection(this.direction)
                 this.turn.begin()
                 this.turning = true
@@ -291,7 +300,6 @@ export class TurnController {
             this._scramble_remaining--
             if (this._scramble_remaining <= 0) {
                 this.scrambling = false
-                this.speed = 1
             }
             this.direction = 1
             this.turning = true

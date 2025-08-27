@@ -38,6 +38,7 @@
 <body>
 <div class="title">The Hedgehog</div>
 <div class="top-buttons">
+  <sl-icon-button id="timer-toggle" name="stopwatch" label="Timer" style="font-size: 1.5rem;"></sl-icon-button>
   <sl-icon-button id="scramble-btn" name="shuffle" label="Scramble" style="font-size: 1.5rem;"></sl-icon-button>
   <sl-icon-button id="reset-btn" name="arrow-counterclockwise" label="Reset" style="font-size: 1.5rem;"></sl-icon-button>
   <sl-icon-button id="settings-toggle" name="gear" label="Settings" style="font-size: 1.5rem;"></sl-icon-button>
@@ -45,7 +46,11 @@
 </div>
 
 <div class="mode-indicator-container">
-  <sl-badge id="mode-indicator" variant="neutral" pill style="font-size: 1.5rem;">Mode: 3D Turns</sl-badge>
+    <sl-badge id="mode-indicator" variant="neutral" pill style="font-size: 1.5rem;">Mode: 3D Turns</sl-badge>
+</div>
+
+<div id="timer-container" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; display: none;">
+  <div id="timer-display" style="font-size: 4rem; font-family: monospace; color: var(--sl-color-neutral-700); text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">00:00.00</div>
 </div>
 
 <sl-drawer id="settings-panel" label="Settings" placement="end">
